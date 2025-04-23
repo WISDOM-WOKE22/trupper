@@ -1,12 +1,22 @@
-const Organization = require('../../models/organization');
+const Organization = require('../models/organization');
 
-const { badResponse, goodResponseDoc } = require('../utils/response');
+const {
+  badResponse,
+  goodResponseDoc,
+  badResponseCustom,
+} = require('../utils/response');
 
 exports.createOrganization = async (req, res, next) => {
   try {
     const { name, email } = req.body;
+    if (!name) {
+      return badResponse(res, 'Provide Organization name');
+    }
+    if (!email) {
+      return badResponse(res, 'Provide Organization email');
+    }
     if (!name || !email) {
-      return badResponse(res, 400, 'Please provide all required fields');
+      return badResponse(res, 'Please provide all required fields');
     }
 
     const organization = await Organization.create({
@@ -19,8 +29,8 @@ exports.createOrganization = async (req, res, next) => {
     }
     return goodResponseDoc(
       res,
-      201,
       'Organization created successfully',
+      201,
       organization
     );
   } catch (error) {
@@ -36,13 +46,34 @@ exports.getAnOrganization = async (req, res, next) => {
     const { id } = req.params;
     const organization = await Organization.findById(id);
     if (!organization) {
-      return badResponse(res, 404, 'Organization not found');
+      // return badResponse(res, 'Organization not found');
+      return badResponseCustom(
+        res,
+        404,
+        'Organization not found',
+        'Organization not found'
+      );
     }
     return goodResponseDoc(
       res,
-      200,
       'Organization retrieved successfully',
+      200,
       organization
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllOrganizations = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const organizations = await Organization.find(id);
+    return goodResponseDoc(
+      res,
+      'Organization retrieved successfully',
+      200,
+      organizations
     );
   } catch (error) {
     next(error);
@@ -52,18 +83,19 @@ exports.getAnOrganization = async (req, res, next) => {
 exports.suspendOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
+    console.log(id)
     const organization = await Organization.findByIdAndUpdate(
-      { id },
+      id ,
       { status: 'suspended' },
-      { new: true }
+      { runValidators: false }
     );
     if (!organization) {
-      return badResponse(res, 404, 'Organization not found');
+      return badResponse(res, 'Organization not found');
     }
     return goodResponseDoc(
       res,
-      200,
       'Organization suspended successfully',
+      200,
       organization
     );
   } catch (error) {
@@ -71,21 +103,21 @@ exports.suspendOrganization = async (req, res, next) => {
   }
 };
 
-exports.suspendOrganization = async (req, res, next) => {
+exports.unsuspendOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
     const organization = await Organization.findByIdAndUpdate(
-      { id },
+      id,
       { status: 'active' },
       { new: true }
     );
     if (!organization) {
-      return badResponse(res, 404, 'Organization not found');
+      return badResponse(res, 'Organization not found');
     }
     return goodResponseDoc(
       res,
-      200,
       'Organization Activated successfully',
+      200,
       organization
     );
   } catch (error) {

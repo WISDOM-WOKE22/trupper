@@ -1,7 +1,7 @@
-const User = require('../../models/users');
-const Organization = require('../../models/organization');
-const Email = require('../../utils/email');
-const jwt = require('jsonwebtoken');
+const User = require('../models/users');
+const Organization = require('../models/organization');
+const Admin = require('../models/admins');
+const Email = require('../services/email/email');
 const {
   badResponse,
   goodResponseDoc,
@@ -14,7 +14,7 @@ const {
   randomToken,
   generateCode,
   verifyJwt,
-} = require('../utils/Token');
+} = require('../utils/token');
 
 // CREATE USER
 exports.createUser = async (req, res, next) => {
@@ -27,12 +27,18 @@ exports.createUser = async (req, res, next) => {
     if (!organization)
       return badResponse(res, 'Please provide an organization Id');
 
+    const checkOrganization = await Organization.findById(organization);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
+
     const user = await User.create({
       firstName,
       lastName,
       email: email.toLowerCase(),
       phone,
-      organization,
+      organization: checkOrganization.id,
     });
 
     if (!user) return badResponse(res, 'Failed to create user');
@@ -51,24 +57,29 @@ exports.createUser = async (req, res, next) => {
 // CREATE SUB ADMIN
 exports.createSubAdmin = async (req, res, next) => {
   try {
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, organization } = req.body;
     if (!firstName) return badResponse(res, 'first name is missing');
     if (!lastName) return badResponse(res, 'last name is missing');
     if (!email) return badResponse(res, 'Email is missing');
+
+    const checkOrganization = await Organization.findById(organization);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
 
     const subAdmin = await Admin.create({
       email,
       firstName,
       lastName,
       role: 'sub_admin',
+      organization: checkOrganization.id,
     });
 
     const token = await subAdmin.createVerificationToken();
     await subAdmin.save({ validateBeforeSave: false });
 
     const url = `${process.env.SUPER_WEB_URL}/register/admin/${token}`;
-
-    // console.log({ url });
 
     await new Email(res, subAdmin, url, '').addAdmin();
 
@@ -86,7 +97,7 @@ exports.completeAdminCreation = async (req, res, next) => {
   try {
     const loginToken = generateCode();
     const { id } = req.params;
-    const { password, confirmPassword } = req.body;
+    const { password, confirmPassword, organization } = req.body;
     if (!password) return badResponse(res, 'Password is missing');
     if (password.length <= 7)
       return badResponse(res, 'Password should be up to 8 characters');
@@ -96,6 +107,8 @@ exports.completeAdminCreation = async (req, res, next) => {
 
     const clientIp = requestIp.getClientIp(req);
     const device = await parser(req.headers['user-agent']);
+
+    const checkOrganization = await Organization.findById(organization);
 
     const hashedToken = await crypto
       .createHash('sha256')
@@ -211,7 +224,7 @@ exports.resendEmailVerificationCode = (Model) => async (req, res, next) => {
 // LOGIN USER
 exports.login = (Model) => async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, organization } = req.body;
     const loginToken = randomToken();
     if (!email) return badResponse(res, 'Provide Email');
     if (!password) return badResponse(res, 'Provide Password');
@@ -221,9 +234,12 @@ exports.login = (Model) => async (req, res, next) => {
     const clientIp = requestIp.getClientIp(req);
     const device = await parser(req.headers['user-agent']);
 
-    const user = await Model.findOne({ email: email.toLowerCase() }).select(
-      '+password'
-    );
+    const checkOrganization = await Organization.findById(organization);
+
+    const user = await Model.findOne({
+      email: email.toLowerCase(),
+      organization: checkOrganization.id,
+    }).select('+password');
 
     if (!user || !(await user.correctPassword(password, user.password))) {
       return badResponse(res, 'Incorrect credentials');
@@ -311,7 +327,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
   try {
     const clientIp = requestIp.getClientIp(req);
     const device = await parser(req.headers['user-agent']);
-    const { loginToken } = req.body;
+    const { loginToken, organization } = req.body;
     if (!loginToken) {
       return badResponse(res, 'Provide Login token');
     }
@@ -322,6 +338,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
     const user = await Model.findOne({ queryId: id });
 
     if (!user) return badResponse(res, 'User does not exist');
+    const checkOrganization = await Organization.findById(organization);
 
     // Update all devices except the current one with the last IP address to be logged out
     await User.updateMany(
@@ -351,7 +368,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
 exports.LoginWith2Fa = (Model) => async (req, res, next) => {
   try {
     const loginToken = randomToken();
-    const { twoFactorVerificationCode } = req.body;
+    const { twoFactorVerificationCode, organization } = req.body;
     const { token } = req.params;
     if (!token) return badResponse(res, 'Provide auth token');
     if (!twoFactorVerificationCode)
@@ -360,6 +377,7 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     const user = await User.findOne({
       _id: decodedToken.id,
       twoFactorVerificationCode,
+      organization: checkOrganization,
     });
     if (!user) return badResponse(res, 'Incorrect Verification code');
     if (user.isBlocked)
@@ -519,5 +537,98 @@ exports.updatePassword = async (req, res) => {
   } catch (error) {
     badResponse(res, 'Could not update Password');
     consoleError(error);
+  }
+};
+
+exports.signInWithGoogle = async (req, res, next) => {
+  try {
+    const { email, firstName, lastName, image, referralCode } = req.body;
+    const loginToken = randomToken();
+    if (!email) return badResponse(res, 'Provide email');
+    if (!firstName) return badResponse(res, 'First name is required');
+    if (!lastName) return badResponse(res, 'last name is required');
+
+    const clientIp = requestIp.getClientIp(req);
+    const device = await parser(req.headers['user-agent']);
+
+    const userCheck = await User.findOne({ email });
+
+    if (userCheck) {
+      if (userCheck.isBlocked) {
+        return badResponse(res, 'Account Temporary suspended');
+      }
+
+      userCheck.loginTokens.push(loginToken);
+      userCheck.lastLogin = Date.now();
+      userCheck.loginDetails = [{ device, clientIp }];
+      await userCheck.save({ validateBeforeSave: false });
+
+      const token = await jwtToken(userCheck._id);
+      const doc = {
+        user: userCheck,
+        token,
+        loginToken,
+      };
+      req.user = userCheck;
+      goodResponseDoc(res, 'You are logged in', 200, doc);
+    } else {
+      const password = generateCode();
+      const user = await User.create({
+        email,
+        firstName,
+        lastName,
+        password,
+        confirmPassword: password,
+        photo: image,
+        isVerified: true,
+        subscription: 'un-subscribed',
+        subscriptionDuration: freeSubscriptionDays,
+        subscriptionExpires: expirationDate.setDate(
+          currentTime.getDate() + freeSubscriptionDays
+        ),
+        subscriptionId: '76ebea32a11f8c92ebacda41',
+        signUpMode: 'google',
+      });
+
+      const cbt = await CbtUser.create({
+        userAccessId: user.id,
+        firstName,
+        lastName,
+        photo: image,
+      });
+
+      const token = jwtToken(user._id);
+      const verificationCode = generateCode();
+      user.cbt = cbt.id;
+      (await user).verificationCode = verificationCode;
+      // await user.save({ validateBeforeSave: false });
+
+      user.loginTokens.push(loginToken);
+      user.lastLogin = Date.now();
+      user.loginDetails = [{ device, clientIp }];
+      await user.save({ validateBeforeSave: false });
+      await new Email(res, user, '', '').welcome();
+
+      if (referralCode) {
+        const referral = await Referrals.findOne({ code: referralCode });
+        if (referral) {
+          referral.usersList.push(user._id);
+          await referral.save();
+        }
+      }
+
+      const doc = {
+        user,
+        token,
+        loginToken,
+      };
+
+      goodResponseDoc(res, 'User create successfully', 201, doc);
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+      return badResponse(res, 'This email has been used');
+    }
+    next(error);
   }
 };

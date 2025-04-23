@@ -39,18 +39,22 @@ mongoose
 
 // Routes
 // Add your route handlers here before the catch-all route
-const userRoute = require("./v1/routes/user");
+const userRoute = require('./v1/routes/user');
+const organizationRoute = require('./v1/routes/organization');
+const authRoute = require('./v1/routes/auth');
 
+app.use('/api/v1/users', userRoute);
+app.use('/api/v1/organization', organizationRoute);
+app.use('/api/v1/auth', authRoute);
 
-app.use("/api/v1/users", userRoute)
 
 // Catch-all route for undefined routes
-// app.use('*', (req, res) => {
-//   res.status(404).json({
-//     status: 'fail',
-//     message: `Route ${req.originalUrl} not found on this server`
-//   });
-// });
+app.use('/api/v1/test', (req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Route ${req.originalUrl} not found on this server`,
+  });
+});
 
 // Error handling middleware
 app.use(ErrorHandler);

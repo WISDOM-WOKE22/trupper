@@ -3,6 +3,17 @@ const { badResponse, goodResponseDoc } = require('../utils/response');
 const cloudinary = require('../services/cloudinary');
 // const CbtUser = require('../models/cbtUser');
 
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select(
+      'queryId email firstName lastName cbt role createdAt'
+    );
+    goodResponseDoc(res, 'Users found', 200, users);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getUsersName = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -52,21 +63,6 @@ exports.updateMe = (Model) => async (req, res, next) => {
       }
     );
     const updatedUser = await Model.findById(updateUser.id);
-
-    // if ((await updateUser) && (await updateUser).role === 'user') {
-    //   const cbt = await CbtUser.findOneAndUpdate(
-    //     { _id: updateUser.cbt },
-    //     {
-    //       firstName: updatedUser.firstName,
-    //       lastName: updatedUser.lastName,
-    //       photo: updateUser.photo,
-    //     },
-    //     {
-    //       runValidators: false,
-    //       validateBeforeSave: false,
-    //     }
-    //   );
-    // }
 
     goodResponseDoc(res, 'Profile updated Successfully', 200, updatedUser);
   } catch (error) {

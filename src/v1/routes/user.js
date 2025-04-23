@@ -3,6 +3,7 @@ const {
   getUsersName,
   updateEmail,
   updateMe,
+  getAllUsers,
 } = require('../controllers/user');
 const { protect } = require('../middlewares/protectRoute');
 const User = require('../models/users');
@@ -10,6 +11,8 @@ const { Enable2Fa, disable2Fa } = require('../services/2fa');
 const upload = require('../middlewares/multer');
 
 const Router = express.Router();
+
+Router.route('/').get(getAllUsers);
 
 // Two Factor
 Router.route('/enable_2fa').post(protect(User), Enable2Fa(User));
