@@ -10,8 +10,9 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.firstName;
     this.url = url;
-    this.from = `admin from admin@amidarh.com`;
+    this.from = `Trupper <${process.env.EMAIL}>`;
     this.code = code;
+    this.organization = user.organization ? user.organization.name : 'Trupper';
   }
 
   newTransport() {
@@ -34,6 +35,7 @@ module.exports = class Email {
         url: this.url,
         subject,
         code: this.code,
+        organization:this.organization,
       }
     );
 
@@ -61,24 +63,44 @@ module.exports = class Email {
   }
 
   async forgetPassword() {
-    await this.send('forgotPassword', 'Reset Your Password for Amidarh');
+    await this.send(
+      'forgotPassword',
+      `Reset Your Password for ${this.organization}`
+    );
+  }
+
+  // Forgot password for organization user
+  async forgetPasswordUser() {
+    await this.send(
+      'forgotPasswordUser',
+      `Reset Your Password for ${this.organization}`
+    );
   }
 
   async twoFactorLogin() {
-    await this.send('2fa', 'Complete Your Login to Amidarh');
+    await this.send('2fa', 'Complete Your Login to ${organization}');
+  }
+
+  // Two factor login for organization user
+  async twoFactorLoginUser() {
+    await this.send('2faUser', `Complete Your Login ${this.organization}`);
+  }
+
+  async adminWelcome() {
+    await this.send('adminWelcome', `Welcome to Trupper by ${this.organization}`);
   }
 
   async addAdmin() {
     await this.send(
       'admin',
-      "Congratulations, You've been added to Amidarh"
+      `Congratulations, You've been added to ${this.organization}`
     );
   }
 
   async welcome() {
     await this.send(
       'welcome',
-      "🎉 Welcome to AMIDARH - Unlock Your Learning Potential! 🚀"
+      `🎉 Welcome to ${this.organization} - Unlock Your Learning Potential! 🚀`
     );
   }
 };

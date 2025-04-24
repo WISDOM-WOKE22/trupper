@@ -31,6 +31,10 @@ const adminSchema = new mongoose.Schema(
       enum: ['free', 'subscribed', 'un-subscribed'],
       default: 'un-subscribed',
     },
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+    },
     subscriptionDuration: Number,
     subscriptionExpires: Date,
     subscriptionId: {

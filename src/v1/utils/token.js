@@ -1,15 +1,24 @@
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 
 exports.randomToken = () => {
-  return crypto.randomBytes(15).toString("hex");
+  return crypto.randomBytes(15).toString('hex');
 };
 
 exports.jwtToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
   });
+};
+
+exports.multiplePayLoadJwtToken = (payload) => {
+  console.log(payload)
+  return jwt.sign(
+    payload,
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES }
+  );
 };
 
 exports.verifyJwt = async (token) => {

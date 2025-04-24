@@ -15,17 +15,17 @@ const Router = express.Router();
 Router.route('/').get(getAllUsers);
 
 // Two Factor
-Router.route('/enable_2fa').post(protect(User), Enable2Fa(User));
-Router.route('/disable_2fa').post(protect(User), disable2Fa(User));
+Router.route('/enable-2fa').post(protect(User),Enable2Fa(User));
+Router.route('/disable-2fa').post(protect(User),disable2Fa(User));
 
-Router.route('/get_users').post(getUsersName);
+Router.route('/get_users').post(protect(User),getUsersName);
 
-Router.route('/update_me').post(
+Router.route('/update-me').post(
   protect(User),
   upload.single('file'),
   updateMe(User)
 );
 
-Router.route('/update_email').post(protect(User), updateEmail);
+Router.route('/update-email').post(protect(User),updateEmail);
 
 module.exports = Router;

@@ -3,7 +3,7 @@ html(lang="en" style="margin:0; padding:0;")
   head
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Welcome to Trupper
+    title Welcome to Trupper by Amidarh
     style.
       @media only screen and (max-width: 600px) {
         .email-container {
@@ -20,21 +20,24 @@ html(lang="en" style="margin:0; padding:0;")
               td(align="center" style="padding-bottom: 30px;")
                 img(src="https://via.placeholder.com/150x50?text=Trupper+Logo" alt="Trupper Logo" style="height: 50px;")
             tr
-              td(style="font-size: 20px; font-weight: 600; color: #333333; padding-bottom: 20px; text-align: center;")
-                | Welcome to Trupper by Amidarh, #{firstName}!
+              td(style="font-size: 22px; font-weight: 600; color: #333333; padding-bottom: 20px; text-align: center;")
+                | Your account is verified, #{firstName} 🎉
+            tr
+              td(style="font-size: 16px; color: #555555; line-height: 1.6; text-align: center; padding-bottom: 20px;")
+                | Welcome officially to Trupper — your go-to platform for managing CBT exams, lesson notes, and powerful student insights.
             tr
               td(style="font-size: 16px; color: #555555; line-height: 1.6; text-align: center; padding-bottom: 30px;")
-                | We're thrilled to have you on board. Trupper empowers tutors, schools, and institutions with robust tools to create CBT exams, manage lesson notes, and access powerful student analytics — all in one place.
+                | You're all set to explore a smarter way to engage your students and streamline academic processes.
             tr
-               td(align="center" style="padding: 20px 0;")
-                div(style="display: inline-block; background-color: #f0f4ff; color: #1e40af; padding: 16px 32px; font-size: 24px; font-weight: bold; border-radius: 8px; letter-spacing: 2px;")
-                  | #{code}
+              td(align="center" style="padding-bottom: 40px;")
+                a(href="{{dashboard_link}}" style="background-color: #3B82F6; color: #ffffff; padding: 14px 28px; text-decoration: none; font-size: 16px; border-radius: 6px; display: inline-block; font-weight: bold;") 
+                  | Go to Dashboard
             tr
               td(style="font-size: 14px; color: #777777; text-align: center; padding-bottom: 20px;")
-                | Once verified, you’ll be able to start creating CBT tools, writing lesson notes, and diving into analytics that make a difference.
+                | If you have any questions or need help getting started, our team is just an email away.
             tr
               td(style="font-size: 13px; color: #999999; text-align: center; padding-top: 20px; border-top: 1px solid #eeeeee;")
-                | Need help? Contact us at 
+                | Reach us at 
                 a(href="mailto:support@trupper.com" style="color: #3B82F6; text-decoration: none;") support@trupper.com
                 br
                 br
@@ -43,4 +46,4 @@ html(lang="en" style="margin:0; padding:0;")
                 a(href="#" style="color: #999999; text-decoration: none;") Terms of Service
                 br
                 br
-                | © 2025 Trupper by Amidarh Inc. All rights reserved.
+                | © 2025 Amidarh Inc. All rights reserved.

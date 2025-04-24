@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: true,
+      // unique: true,
       required: true,
     },
     password: {
@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema(
     subscriptionId: {
       type: Schema.Types.ObjectId,
       ref: 'Subscription',
+    },
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
     },
     mobile: {
       type: String,

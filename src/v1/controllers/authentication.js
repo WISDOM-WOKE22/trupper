@@ -2,6 +2,9 @@ const User = require('../models/users');
 const Organization = require('../models/organization');
 const Admin = require('../models/admins');
 const Email = require('../services/email/email');
+const parser = require('ua-parser-js');
+const requestIp = require('request-ip');
+const crypto = require('crypto');
 const {
   badResponse,
   goodResponseDoc,
@@ -14,23 +17,48 @@ const {
   randomToken,
   generateCode,
   verifyJwt,
+  multiplePayLoadJwtToken,
 } = require('../utils/token');
 
 // CREATE USER
 exports.createUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, phone, organization } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      organization,
+      password,
+      confirmPassword,
+    } = req.body;
 
     if (!firstName) return badResponse(res, 'First Name is missing');
     if (!lastName) return badResponse(res, 'Last Name is Required');
-    if (!email || !phone) return badResponse(res, 'Enter contact information');
+    if (!email) return badResponse(res, 'Enter contact information');
     if (!organization)
       return badResponse(res, 'Please provide an organization Id');
+    if (!password) return badResponse(res, 'Password is required');
+    if (password.length < 8)
+      return badResponse(res, 'Password should be more than 8 characters');
+    if (!confirmPassword)
+      return badResponse(res, 'Confirm Password is required');
+    if (password !== confirmPassword)
+      return badResponse(res, "Passwords don't match");
 
     const checkOrganization = await Organization.findById(organization);
 
     if (!checkOrganization) {
       return badResponse(res, 'Organization not found');
+    }
+
+    const emailCheck = await User.findOne({
+      email,
+      organization: checkOrganization.id,
+    }).populate({ path: 'organization' });
+
+    if (emailCheck) {
+      return badResponse(res, 'Email already used');
     }
 
     const user = await User.create({
@@ -39,15 +67,20 @@ exports.createUser = async (req, res, next) => {
       email: email.toLowerCase(),
       phone,
       organization: checkOrganization.id,
+      password,
+      confirmPassword,
     });
 
     if (!user) return badResponse(res, 'Failed to create user');
     const token = jwtToken(user._id, user.email);
+    const verificationCode = generateCode();
+    user.verificationCode = verificationCode;
+    await user.save({ validateBeforeSave: false });
     const url = `${req.protocol}://${req.get(
       'host'
     )}/api/v1/auth/verify/${token}`;
     const message = `Welcome to our platform, ${user.firstName} ${user.lastName}. Please verify your email by clicking on the link: ${url}`;
-    await new Email(user, url).sendWelcome(message);
+    await new Email(user, user, "" ,verificationCode).verifyEmail(message);
     return goodResponseDoc(res, 'User created successfully', 201, user);
   } catch (error) {
     next(error);
@@ -92,6 +125,145 @@ exports.createSubAdmin = async (req, res, next) => {
   }
 };
 
+exports.createMainUserAccount = async (req, res, next) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      confirmPassword,
+      organizationName,
+    } = req.body;
+    if (!firstName) return badResponse(res, 'First Name is missing');
+    if (!lastName) return badResponse(res, 'Last Name is Required');
+    if (!email) return badResponse(res, 'Enter contact information');
+    if (!password) return badResponse(res, 'Password is required');
+    if (password.length < 8)
+      return badResponse(res, 'Password should be more than 8 characters');
+    if (!confirmPassword)
+      return badResponse(res, 'Confirm Password is required');
+    if (password !== confirmPassword)
+      return badResponse(res, "Passwords don't match");
+
+    if (!organizationName)
+      return badResponse(res, 'Please provide an organization Name');
+
+    const admin = await Admin.create({
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      password,
+      confirmPassword,
+      phone,
+    });
+
+    if (!admin) return badResponse(res, 'Failed to create account');
+
+    const verificationCode = generateCode();
+    admin.verificationCode = verificationCode;
+    await admin.save({ validateBeforeSave: false });
+    await new Email(res, admin, '', verificationCode).verifyEmail();
+
+    const token = multiplePayLoadJwtToken({
+      id: admin._id,
+      email: admin.email,
+      organizationName,
+    });
+
+    goodResponseDoc(res, 'Account created successfully', 201, { token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.verifyMainUserAccount = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { verificationCode } = req.body;
+    if (!token) return badResponse(res, 'Provide user Auth token');
+    if (!verificationCode)
+      return badResponse(res, 'Provide user verification code');
+    const decodedToken = await verifyJwt(token);
+    const user = await Admin.findOne({
+      _id: decodedToken.id,
+      verificationCode,
+    });
+    if (!user) return badResponse(res, 'Invalid Code');
+    if (user.isBlocked)
+      return badResponseCustom(
+        res,
+        404,
+        'Blocked',
+        'Account has been temporary suspended'
+      );
+    if (user.isVerified) return badResponse(res, 'Account already verified');
+    console.log(decodedToken);
+
+    const organization = await Organization.create({
+      name: decodedToken.organizationName,
+      email: user.email,
+    });
+
+    const newToken = jwtToken(user._id);
+    const loginToken = randomToken();
+    user.loginTokens = loginToken;
+    user.verificationCode = undefined;
+    user.isVerified = true;
+    user.organization = organization.id;
+    await user.save({ validateBeforeSave: false });
+    await new Email(res, user, '', '').adminWelcome();
+    const doc = {
+      user,
+      token: newToken,
+      loginToken,
+    };
+
+    goodResponseDoc(res, 'Account Verified', 200, doc);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.loginMainUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email) return badResponse(res, 'Provide Email');
+    if (!password) return badResponse(res, 'Provide Password');
+    if (password.length <= 7)
+      return badResponse(res, 'Password should be up to 8 characters');
+
+    const user = await Admin.findOne({
+      email: email.toLowerCase(),
+    }).select('+password');
+
+    if (!user || !(await user.correctPassword(password, user.password))) {
+      return badResponse(res, 'Incorrect credentials');
+    }
+
+    if (user.isBlocked) {
+      return badResponse(res, 'Account Temporary suspended');
+    }
+
+    const token = await jwtToken(user._id);
+    const loginToken = randomToken();
+    user.loginTokens = loginToken;
+    user.lastLogin = Date.now();
+    await user.save({ validateBeforeSave: false });
+
+    const doc = {
+      user,
+      token,
+      loginToken,
+    };
+    req.user = user;
+    goodResponseDoc(res, 'You are logged in', 200, doc);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // COMPLETE SUB-ADMIN ACCOUNT CREATE
 exports.completeAdminCreation = async (req, res, next) => {
   try {
@@ -109,6 +281,10 @@ exports.completeAdminCreation = async (req, res, next) => {
     const device = await parser(req.headers['user-agent']);
 
     const checkOrganization = await Organization.findById(organization);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
 
     const hashedToken = await crypto
       .createHash('sha256')
@@ -175,7 +351,10 @@ exports.verifyEmail = (Model) => async (req, res, next) => {
 
     const decodedToken = await verifyJwt(token);
 
-    const user = await User.findOne({ _id: decodedToken.id, verificationCode });
+    const user = await User.findOne({
+      _id: decodedToken.id,
+      verificationCode,
+    }).populate({ path: 'organization' });
 
     if (!user) return badResponse(res, 'Invalid Code');
 
@@ -227,6 +406,7 @@ exports.login = (Model) => async (req, res, next) => {
     const { email, password, organization } = req.body;
     const loginToken = randomToken();
     if (!email) return badResponse(res, 'Provide Email');
+    if (!organization) return badResponse(res, 'Provide Organization Id');
     if (!password) return badResponse(res, 'Provide Password');
     if (password.length <= 7)
       return badResponse(res, 'Password should be up to 8 characters');
@@ -236,10 +416,16 @@ exports.login = (Model) => async (req, res, next) => {
 
     const checkOrganization = await Organization.findById(organization);
 
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
+
     const user = await Model.findOne({
       email: email.toLowerCase(),
       organization: checkOrganization.id,
-    }).select('+password');
+    })
+      .select('+password')
+      .populate({ path: 'organization' });
 
     if (!user || !(await user.correctPassword(password, user.password))) {
       return badResponse(res, 'Incorrect credentials');
@@ -274,7 +460,7 @@ exports.login = (Model) => async (req, res, next) => {
         user,
         'Hello there',
         verificationCode
-      ).twoFactorLogin();
+      ).twoFactorLoginUser();
       return goodResponseDoc(
         res,
         'Complete login with the code sent to email',
@@ -327,7 +513,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
   try {
     const clientIp = requestIp.getClientIp(req);
     const device = await parser(req.headers['user-agent']);
-    const { loginToken, organization } = req.body;
+    const { loginToken } = req.body;
     if (!loginToken) {
       return badResponse(res, 'Provide Login token');
     }
@@ -338,7 +524,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
     const user = await Model.findOne({ queryId: id });
 
     if (!user) return badResponse(res, 'User does not exist');
-    const checkOrganization = await Organization.findById(organization);
+    // const checkOrganization = await Organization.findById(organization);
 
     // Update all devices except the current one with the last IP address to be logged out
     await User.updateMany(
@@ -368,7 +554,7 @@ exports.logOutAllDevices = (Model) => async (req, res, next) => {
 exports.LoginWith2Fa = (Model) => async (req, res, next) => {
   try {
     const loginToken = randomToken();
-    const { twoFactorVerificationCode, organization } = req.body;
+    const { twoFactorVerificationCode } = req.body;
     const { token } = req.params;
     if (!token) return badResponse(res, 'Provide auth token');
     if (!twoFactorVerificationCode)
@@ -377,7 +563,6 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     const user = await User.findOne({
       _id: decodedToken.id,
       twoFactorVerificationCode,
-      organization: checkOrganization,
     });
     if (!user) return badResponse(res, 'Incorrect Verification code');
     if (user.isBlocked)
@@ -433,7 +618,9 @@ exports.resend2FACode = (Model) => async (req, res, next) => {
     if (!token) return badResponse(res, 'Provide user auth token');
     const decodedToken = await verifyJwt(token);
 
-    const user = await Model.findOne({ _id: decodedToken.id });
+    const user = await Model.findOne({ _id: decodedToken.id }).populate({
+      path: 'organization',
+    });
     if (!user) return badResponse(res, 'User does not exist');
     const twoFactorVerificationCode = generateCode();
     user.twoFactorVerificationCode = twoFactorVerificationCode;
@@ -448,6 +635,7 @@ exports.resend2FACode = (Model) => async (req, res, next) => {
 // LOGOUT USER ACCOUNT
 exports.Logout = async (req, res, next) => {
   try {
+    if (!req.user) return badResponse(res, 'User does not exist');
     if (req.user.noOfLoggedInDevices === 1) {
       req.user.noOfLoggedInDevices = 0;
       req.user.save({ validateBeforeSave: false });
@@ -466,15 +654,27 @@ exports.Logout = async (req, res, next) => {
 // FORGOT PASSWORD
 exports.forgetPassword = (Model) => async (req, res) => {
   try {
+    const { id } = req.params;
     const { email } = req.body;
+    if (!id) return badResponse(res, 'Provide organization Id');
     if (!email) return badResponse(res, 'Please provide an Email');
-    const user = await Model.findOne({ email: email.toLowerCase() });
+
+    const checkOrganization = await Organization.findById(id);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
+
+    const user = await Model.findOne({
+      email: email.toLowerCase(),
+      organization: checkOrganization.id,
+    }).populate({ path: 'organization' });
     if (!user) return badResponse(res, 'Account does not exist');
     const resetToken = await user.createResetToken();
 
     await user.save({ validateBeforeSave: false });
     const url = `${process.env.WEB_URL}/password_reset/${resetToken}`;
-    await new Email(res, user, url).forgetPassword();
+    await new Email(res, user, url).forgetPasswordUser();
     consoleMessage({ resetToken });
     goodResponse(res, 'Password reset Link sent to email');
   } catch (error) {

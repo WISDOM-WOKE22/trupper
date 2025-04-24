@@ -21,8 +21,7 @@ exports.createOrganization = async (req, res, next) => {
 
     const organization = await Organization.create({
       name,
-      email,
-      logo: req.file ? req.file.path : null,
+      email
     });
     if (!organization) {
       return badResponse(res, 400, 'Failed to create organization');
