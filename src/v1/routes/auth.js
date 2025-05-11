@@ -18,6 +18,9 @@ const {
   resendEmailVerificationCode,
   createMainUserAccount,
   verifyMainUserAccount,
+  loginMainUser,
+  continueUserAccountCreationByLink,
+  generateAndSendUserAuthLink,
 } = require('../controllers/authentication');
 
 const Router = express.Router();
@@ -30,6 +33,9 @@ Router.route('/verify-admin/:token').post(verifyMainUserAccount);
 
 // Login
 Router.route('/login').post(login(User));
+
+// Login
+Router.route('/login-admin').post(loginMainUser);
 
 // Login with 2FA
 Router.route('/login-2fa').post(LoginWith2Fa(User));
@@ -77,5 +83,9 @@ Router.route('/forgot-password/:id').post(forgetPassword(User));
 
 // Forget Password for Admin
 Router.route('/forgot-password-admin').post(forgetPassword(Admin));
+
+Router.route('/add-user').post(generateAndSendUserAuthLink);
+
+Router.route('/signup-user-link/:id').post(continueUserAccountCreationByLink);
 
 module.exports = Router;

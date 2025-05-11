@@ -4,6 +4,8 @@ const Admin = require('../models/admins');
 const Email = require('../services/email/email');
 const parser = require('ua-parser-js');
 const requestIp = require('request-ip');
+const Category = require('../models/userCategory');
+const SubCategory = require('../models/userCategoryTwo');
 const crypto = require('crypto');
 const {
   badResponse,
@@ -80,12 +82,140 @@ exports.createUser = async (req, res, next) => {
       'host'
     )}/api/v1/auth/verify/${token}`;
     const message = `Welcome to our platform, ${user.firstName} ${user.lastName}. Please verify your email by clicking on the link: ${url}`;
-    await new Email(user, user, "" ,verificationCode).verifyEmail(message);
+    await new Email(res, user, '', verificationCode).verifyEmail(message);
     return goodResponseDoc(res, 'User created successfully', 201, user);
   } catch (error) {
     next(error);
   }
 };
+
+exports.generateAndSendUserAuthLink = async (req, res, next) => {
+  try {
+    const { email, category, subCategory, organization } = req.body;
+    if (!email) return badResponse(res, 'Email is missing');
+    if (!category) return badResponse(res, 'User Category Missing');
+    if (!organization) return badResponse(res, 'User Organization ID is Missing');
+
+    const categoryCheck = await Category.findById(category);
+    if (!categoryCheck)
+      return badResponse(res, 'This user Category does not exit');
+
+    const emailCheck = await User.findOne({
+      email,
+      organization
+    });
+
+    if (emailCheck) {
+      return badResponse(res, 'Email already used');
+    }
+
+    if (!subCategory) return badResponse(res, 'User sub Category is missing');
+
+    const subCategoryCheck = await SubCategory.findById(subCategory);
+    if (!subCategoryCheck)
+      return badResponse(res, 'User Sub Category does not exist');
+
+    const user = await User.create({
+      email,
+      category: categoryCheck.id,
+      subCategory: subCategoryCheck.id,
+    });
+
+    if (!user) return badResponse(res, 'Failed to create user');
+    const token = await user.createVerificationToken();
+    await user.save({ validateBeforeSave: false })
+    const url = `${req.protocol}://${req.get('host')}/signup_con?est=${token}`;
+
+    await new Email(res, user, url, '').signupUserByLink();
+
+    return goodResponseDoc(res, 'User created successfully', 201, user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.continueUserAccountCreationByLink = async (req, res, next) => {
+  try {
+    const loginToken = generateCode();
+    const { id } = req.params;
+    const { firstName, lastName, password, confirmPassword } =
+      req.body;
+    if (!firstName) return badResponse(res, 'first name is missing');
+    if (!lastName) return badResponse(res, 'last name is missing');
+    if (!password) return badResponse(res, 'Password is missing');
+    if (password.length <= 7)
+      return badResponse(res, 'Password should be up to 8 characters');
+    if (!confirmPassword) return badResponse(res, 'Confirm password');
+    if (password !== confirmPassword)
+      return badResponse(res, "Passwords don't match");
+
+    const clientIp = requestIp.getClientIp(req);
+    const device = await parser(req.headers['user-agent']);
+
+    // const checkOrganization = await Organization.findById(organization);
+
+    // if (!checkOrganization) {
+    //   return badResponse(res, 'Organization not found');
+    // }
+
+    const hashedToken = await crypto
+      .createHash('sha256')
+      .update(id)
+      .digest('hex');
+    
+    console.log({hashedToken})
+
+    const user = await User.findOne({ verificationToken: hashedToken });
+
+    if (!user) return badResponse(res, 'Invalid Credentials provided');
+
+    user.password = password;
+    user.confirmPassword = undefined;
+    user.passwordResetToken = undefined;
+    user.firstName = firstName;
+    user.lastName = lastName;
+
+    user.lastLogin = Date.now();
+    user.loginDetails = [{ device, clientIp }];
+    user.verificationToken = undefined;
+    user.isVerified = true;
+    await user.save({ validateBeforeSave: false });
+
+    const token = await jwtToken(user._id);
+    const doc = {
+      user,
+      token,
+      loginToken,
+    };
+    req.user = user;
+    goodResponseDoc(res, 'You are logged in', 200, doc);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET ADDED USER DATA
+exports.getAddUserData = async (req, res, next) => {
+  try{
+    const { id } = req.params;
+
+    if (!id) return badResponse(res, 'Provide admin Details');
+
+    const hashedToken = await crypto
+      .createHash('sha256')
+      .update(id)
+      .digest('hex');
+
+    const user = await User.findOne({ verificationToken: hashedToken });
+    
+    if(!user) return badResponse(res, "Incorrect Details")
+    
+    goodResponseDoc(res, "User Details", 200, user)
+
+  } catch(error){
+    next(error)
+  }
+}
 
 // CREATE SUB ADMIN
 exports.createSubAdmin = async (req, res, next) => {

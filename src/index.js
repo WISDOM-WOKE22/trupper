@@ -42,11 +42,12 @@ mongoose
 const userRoute = require('./v1/routes/user');
 const organizationRoute = require('./v1/routes/organization');
 const authRoute = require('./v1/routes/auth');
+const categoryRoute = require('./v1/routes/category');
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/organization', organizationRoute);
 app.use('/api/v1/auth', authRoute);
-
+app.use('/api/v1/category', categoryRoute);
 
 // Catch-all route for undefined routes
 app.use('/api/v1/test', (req, res) => {

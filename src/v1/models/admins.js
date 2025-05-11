@@ -82,6 +82,7 @@ const adminSchema = new mongoose.Schema(
     photo: String,
     passwordResetTokenExpires: Date,
     passwordResetToken: String,
+    verificationToken: String,
     cbtTrials: {
       type: Number,
       default: 0,

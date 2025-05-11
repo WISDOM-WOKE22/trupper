@@ -35,7 +35,7 @@ module.exports = class Email {
         url: this.url,
         subject,
         code: this.code,
-        organization:this.organization,
+        organization: this.organization,
       }
     );
 
@@ -87,13 +87,23 @@ module.exports = class Email {
   }
 
   async adminWelcome() {
-    await this.send('adminWelcome', `Welcome to Trupper by ${this.organization}`);
+    await this.send(
+      'adminWelcome',
+      `Welcome to Trupper by ${this.organization}`
+    );
   }
 
   async addAdmin() {
     await this.send(
       'admin',
       `Congratulations, You've been added to ${this.organization}`
+    );
+  }
+
+  async signupUserByLink() {
+    await this.send(
+      'continueUserSignup',
+      `Welcome to ${this.organization}, Continue account creation`
     );
   }
 

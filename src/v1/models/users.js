@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     confirmPassword: {
       type: String,
-      required: true,
+      // required: true,
     },
     subscription: {
       type: String,
@@ -81,11 +81,16 @@ const userSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'UserCategory',
     },
+    subCategory: {
+      type: Schema.Types.ObjectId,
+      ref: "UserCategoryTwo"
+    },
     verificationCode: Number,
     lastLogin: Date,
     photo: String,
     passwordResetTokenExpires: Date,
     passwordResetToken: String,
+    verificationToken: String,
     cbtTrials: {
       type: Number,
       default: 0,
@@ -147,6 +152,8 @@ userSchema.methods.createVerificationToken = async function () {
     .createHash('sha256')
     .update(token)
     .digest('hex');
+
+    return token;
 };
 
 userSchema.methods.createResetToken = async function () {
