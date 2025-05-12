@@ -20,7 +20,26 @@ const {
   generateCode,
   verifyJwt,
   multiplePayLoadJwtToken,
+  generateRefreshToken,
 } = require('../utils/token');
+
+exports.token = (Model) => async (req, res, next) => {
+  try {
+    let token;
+    const { refreshToken } = req.body;
+    if (!refreshToken) return badResponse(res, 'Provide refresh Token');
+    const decoded = await promisify(jwt.verify)(
+      token,
+      process.env.JWT_REFRESH_TOKEN
+    );
+    const currentUser = await Model.findById(decoded.id);
+    if (!currentUser) return badResponse(res, 'Invalid Credentials');
+    const newToken = jwtToken(currentUser.id);
+    goodResponseDoc(res, "New Access Token assigned", 200, { token: newToken } )
+  } catch (error) {
+    next(error);
+  }
+};
 
 // CREATE USER
 exports.createUser = async (req, res, next) => {
@@ -82,8 +101,8 @@ exports.createUser = async (req, res, next) => {
       'host'
     )}/api/v1/auth/verify/${token}`;
     const message = `Welcome to our platform, ${user.firstName} ${user.lastName}. Please verify your email by clicking on the link: ${url}`;
-    await new Email(res, user, '', verificationCode).verifyEmail(message);
-    return goodResponseDoc(res, 'User created successfully', 201, user);
+    await new Email(res, user, '', verificationCode).verifyEmail();
+    return goodResponseDoc(res, 'User created successfully', 201, token);
   } catch (error) {
     next(error);
   }
@@ -94,7 +113,8 @@ exports.generateAndSendUserAuthLink = async (req, res, next) => {
     const { email, category, subCategory, organization } = req.body;
     if (!email) return badResponse(res, 'Email is missing');
     if (!category) return badResponse(res, 'User Category Missing');
-    if (!organization) return badResponse(res, 'User Organization ID is Missing');
+    if (!organization)
+      return badResponse(res, 'User Organization ID is Missing');
 
     const categoryCheck = await Category.findById(category);
     if (!categoryCheck)
@@ -102,7 +122,7 @@ exports.generateAndSendUserAuthLink = async (req, res, next) => {
 
     const emailCheck = await User.findOne({
       email,
-      organization
+      organization,
     });
 
     if (emailCheck) {
@@ -123,7 +143,7 @@ exports.generateAndSendUserAuthLink = async (req, res, next) => {
 
     if (!user) return badResponse(res, 'Failed to create user');
     const token = await user.createVerificationToken();
-    await user.save({ validateBeforeSave: false })
+    await user.save({ validateBeforeSave: false });
     const url = `${req.protocol}://${req.get('host')}/signup_con?est=${token}`;
 
     await new Email(res, user, url, '').signupUserByLink();
@@ -138,8 +158,7 @@ exports.continueUserAccountCreationByLink = async (req, res, next) => {
   try {
     const loginToken = generateCode();
     const { id } = req.params;
-    const { firstName, lastName, password, confirmPassword } =
-      req.body;
+    const { firstName, lastName, password, confirmPassword } = req.body;
     if (!firstName) return badResponse(res, 'first name is missing');
     if (!lastName) return badResponse(res, 'last name is missing');
     if (!password) return badResponse(res, 'Password is missing');
@@ -162,8 +181,8 @@ exports.continueUserAccountCreationByLink = async (req, res, next) => {
       .createHash('sha256')
       .update(id)
       .digest('hex');
-    
-    console.log({hashedToken})
+
+    console.log({ hashedToken });
 
     const user = await User.findOne({ verificationToken: hashedToken });
 
@@ -196,7 +215,7 @@ exports.continueUserAccountCreationByLink = async (req, res, next) => {
 
 // GET ADDED USER DATA
 exports.getAddUserData = async (req, res, next) => {
-  try{
+  try {
     const { id } = req.params;
 
     if (!id) return badResponse(res, 'Provide admin Details');
@@ -207,15 +226,14 @@ exports.getAddUserData = async (req, res, next) => {
       .digest('hex');
 
     const user = await User.findOne({ verificationToken: hashedToken });
-    
-    if(!user) return badResponse(res, "Incorrect Details")
-    
-    goodResponseDoc(res, "User Details", 200, user)
 
-  } catch(error){
-    next(error)
+    if (!user) return badResponse(res, 'Incorrect Details');
+
+    goodResponseDoc(res, 'User Details', 200, user);
+  } catch (error) {
+    next(error);
   }
-}
+};
 
 // CREATE SUB ADMIN
 exports.createSubAdmin = async (req, res, next) => {
@@ -337,6 +355,7 @@ exports.verifyMainUserAccount = async (req, res, next) => {
     });
 
     const newToken = jwtToken(user._id);
+    const refreshToken = generateRefreshToken(user._id)
     const loginToken = randomToken();
     user.loginTokens = loginToken;
     user.verificationCode = undefined;
@@ -347,6 +366,7 @@ exports.verifyMainUserAccount = async (req, res, next) => {
     const doc = {
       user,
       token: newToken,
+      refreshToken,
       loginToken,
     };
 
@@ -377,6 +397,7 @@ exports.loginMainUser = async (req, res, next) => {
     }
 
     const token = await jwtToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     const loginToken = randomToken();
     user.loginTokens = loginToken;
     user.lastLogin = Date.now();
@@ -385,6 +406,7 @@ exports.loginMainUser = async (req, res, next) => {
     const doc = {
       user,
       token,
+      refreshToken,
       loginToken,
     };
     req.user = user;
@@ -436,9 +458,11 @@ exports.completeAdminCreation = async (req, res, next) => {
     await admin.save({ validateBeforeSave: false });
 
     const token = await jwtToken(admin._id);
+    const refreshToken = await generateRefreshToken(admin._id);
     const doc = {
       admin,
       token,
+      refreshToken,
       loginToken,
     };
     req.user = admin;
@@ -489,6 +513,7 @@ exports.verifyEmail = (Model) => async (req, res, next) => {
     if (!user) return badResponse(res, 'Invalid Code');
 
     const newToken = jwtToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     const loginToken = randomToken();
     user.loginTokens = loginToken;
     user.twoFactorVerificationCode = undefined;
@@ -501,6 +526,7 @@ exports.verifyEmail = (Model) => async (req, res, next) => {
     const doc = {
       user,
       token: newToken,
+      refreshToken,
       loginToken,
     };
     goodResponseDoc(res, 'User email verified', 200, doc);
@@ -534,6 +560,7 @@ exports.resendEmailVerificationCode = (Model) => async (req, res, next) => {
 exports.login = (Model) => async (req, res, next) => {
   try {
     const { email, password, organization } = req.body;
+    console.log(req.body)
     const loginToken = randomToken();
     if (!email) return badResponse(res, 'Provide Email');
     if (!organization) return badResponse(res, 'Provide Organization Id');
@@ -576,7 +603,7 @@ exports.login = (Model) => async (req, res, next) => {
       };
 
       await new Email(res, user, '', verificationCode).verifyEmail();
-      goodResponseDoc(res, 'Verify Account', 401, doc);
+      goodResponseDoc(res, 'Verify Account', 406, doc);
     }
 
     if (user.twoFactor) {
@@ -594,7 +621,7 @@ exports.login = (Model) => async (req, res, next) => {
       return goodResponseDoc(
         res,
         'Complete login with the code sent to email',
-        200,
+        203,
         { twoFactor: true, token }
       );
     }
@@ -628,6 +655,7 @@ exports.login = (Model) => async (req, res, next) => {
     const doc = {
       user,
       token,
+      refreshToken,
       loginToken,
     };
     req.user = user;
@@ -730,10 +758,12 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     user.verificationCode = undefined;
     await user.save({ validateBeforeSave: false });
     const newToken = await jwtToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     req.user = user;
     goodResponseDoc(res, 'You are logged in', 200, {
       user,
       token: newToken,
+      refreshToken,
       loginToken,
     });
   } catch (error) {
@@ -784,12 +814,12 @@ exports.Logout = async (req, res, next) => {
 // FORGOT PASSWORD
 exports.forgetPassword = (Model) => async (req, res) => {
   try {
-    const { id } = req.params;
-    const { email } = req.body;
-    if (!id) return badResponse(res, 'Provide organization Id');
+    // const { id } = req.params;
+    const { email, organization } = req.body;
+    if (!organization) return badResponse(res, 'Provide organization Id');
     if (!email) return badResponse(res, 'Please provide an Email');
 
-    const checkOrganization = await Organization.findById(id);
+    const checkOrganization = await Organization.findById(organization);
 
     if (!checkOrganization) {
       return badResponse(res, 'Organization not found');
@@ -803,7 +833,7 @@ exports.forgetPassword = (Model) => async (req, res) => {
     const resetToken = await user.createResetToken();
 
     await user.save({ validateBeforeSave: false });
-    const url = `${process.env.WEB_URL}/password_reset/${resetToken}`;
+    const url = `${process.env.WEB_URL}/password-reset?token=${resetToken}`;
     await new Email(res, user, url).forgetPasswordUser();
     consoleMessage({ resetToken });
     goodResponse(res, 'Password reset Link sent to email');
@@ -842,7 +872,7 @@ exports.resetPassword = (Model) => async (req, res) => {
     user.passwordResetToken = undefined;
     user.passwordResetToken = undefined;
     await user.save({ validateBeforeSave: false });
-    goodResponseCustom(res, 201, 'Password updated successfully');
+    goodResponseCustom(res, 200, 'Password updated successfully');
   } catch (error) {
     consoleError(error);
     badResponse(res, 'Could not reset password');
@@ -928,6 +958,7 @@ exports.signInWithGoogle = async (req, res, next) => {
       });
 
       const token = jwtToken(user._id);
+      const refreshToken = await generateRefreshToken(user._id);
       const verificationCode = generateCode();
       user.cbt = cbt.id;
       (await user).verificationCode = verificationCode;
@@ -950,6 +981,7 @@ exports.signInWithGoogle = async (req, res, next) => {
       const doc = {
         user,
         token,
+        refreshToken,
         loginToken,
       };
 

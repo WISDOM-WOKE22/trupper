@@ -71,7 +71,7 @@ Router.route('/complete-admin-creation').post(completeAdminCreation);
 Router.route('/get-created-admin-details').post(getCreatedAdminDetails);
 
 // Resend 2FA Code
-Router.route('/resend-2fa-code').post(resend2FACode);
+Router.route('/resend-2fa-code/:token').post(resend2FACode(User));
 
 // Resent Email Verification Code
 Router.route('/resend-email-verification-code/:token').post(
@@ -79,7 +79,7 @@ Router.route('/resend-email-verification-code/:token').post(
 );
 
 // Forgot Password for User
-Router.route('/forgot-password/:id').post(forgetPassword(User));
+Router.route('/forgot-password').post(forgetPassword(User));
 
 // Forget Password for Admin
 Router.route('/forgot-password-admin').post(forgetPassword(Admin));
