@@ -95,7 +95,7 @@ module.exports = class Email {
 
   async addAdmin() {
     await this.send(
-      'admin',
+      'adminWelcome',
       `Congratulations, You've been added to ${this.organization}`
     );
   }

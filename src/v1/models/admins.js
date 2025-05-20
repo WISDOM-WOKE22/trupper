@@ -20,11 +20,11 @@ const adminSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      require: true,
+      // require: true,
     },
     confirmPassword: {
       type: String,
-      required: true,
+      // required: true,
     },
     subscription: {
       type: String,
@@ -48,10 +48,6 @@ const adminSchema = new mongoose.Schema(
     isBlocked: {
       type: Boolean,
       default: false,
-    },
-    role: {
-      type: String,
-      enum: ['user'],
     },
     twoFactor: {
       type: Boolean,
@@ -99,7 +95,7 @@ const adminSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'sub-admin'],
+      enum: ['admin', 'sub_admin'],
       default: 'admin',
     },
     loginTokens: [

@@ -26,6 +26,10 @@ const newsLetterSchema = new mongoose.Schema(
       default: 'draft',
     },
     queryId: String,
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization"
+    },
   },
   {
     timestamps: true,

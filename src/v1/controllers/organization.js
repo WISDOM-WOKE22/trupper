@@ -64,6 +64,30 @@ exports.getAnOrganization = async (req, res, next) => {
   }
 };
 
+exports.getAnOrganizationByDomain = async (req, res, next) => {
+  try{
+    const { domain } = req.params;
+    const organization = await Organization.findOne({ domain });
+    if (!organization) {
+      // return badResponse(res, 'Organization not found');
+      return badResponseCustom(
+        res,
+        404,
+        'Organization not found',
+        'Organization not found'
+      );
+    }
+    return goodResponseDoc(
+      res,
+      'Organization retrieved successfully',
+      200,
+      organization
+    );
+  } catch(error){
+
+  }
+}
+
 exports.getAllOrganizations = async (req, res, next) => {
   try {
     const { id } = req.params;

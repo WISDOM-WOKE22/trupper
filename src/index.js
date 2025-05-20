@@ -43,11 +43,16 @@ const userRoute = require('./v1/routes/user');
 const organizationRoute = require('./v1/routes/organization');
 const authRoute = require('./v1/routes/auth');
 const categoryRoute = require('./v1/routes/category');
+const analyticsRoute = require('./v1/routes/analytics');
+const adminRoute = require('./v1/routes/admin');
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/organization', organizationRoute);
 app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/category', categoryRoute);
+app.use('/api/v1/analytics', analyticsRoute);
+app.use('/api/v1/admin', adminRoute);
+// app.use()
 
 // Catch-all route for undefined routes
 app.use('/api/v1/test', (req, res) => {

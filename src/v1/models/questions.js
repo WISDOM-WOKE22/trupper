@@ -36,6 +36,10 @@ const questionSchema = new mongoose.Schema(
     questionNub: Number,
     hasPassage: Boolean,
     category: String,
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization"
+    },
     reason: String,
     questionCategory: {
       type: String,

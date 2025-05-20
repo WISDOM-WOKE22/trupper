@@ -260,7 +260,7 @@ exports.createSubAdmin = async (req, res, next) => {
     const token = await subAdmin.createVerificationToken();
     await subAdmin.save({ validateBeforeSave: false });
 
-    const url = `${process.env.SUPER_WEB_URL}/register/admin/${token}`;
+    const url = `${checkOrganization.domain}/kyc-complete/sub-admin?qrt=${token}`;
 
     await new Email(res, subAdmin, url, '').addAdmin();
 
@@ -560,7 +560,7 @@ exports.resendEmailVerificationCode = (Model) => async (req, res, next) => {
 exports.login = (Model) => async (req, res, next) => {
   try {
     const { email, password, organization } = req.body;
-    console.log(req.body)
+    // console.log(req.body)
     const loginToken = randomToken();
     if (!email) return badResponse(res, 'Provide Email');
     if (!organization) return badResponse(res, 'Provide Organization Id');
@@ -577,12 +577,21 @@ exports.login = (Model) => async (req, res, next) => {
       return badResponse(res, 'Organization not found');
     }
 
-    const user = await Model.findOne({
+    let user;
+
+    user = await Model.findOne({
       email: email.toLowerCase(),
       organization: checkOrganization.id,
     })
       .select('+password')
       .populate({ path: 'organization' });
+
+      if(!user){
+        user = await Admin.findOne({
+          email: email.toLowerCase(),
+          organization: checkOrganization.id,
+        })
+      }
 
     if (!user || !(await user.correctPassword(password, user.password))) {
       return badResponse(res, 'Incorrect credentials');
@@ -626,20 +635,20 @@ exports.login = (Model) => async (req, res, next) => {
       );
     }
     // TODO: IMPORTANT LINE OF CODE TO BE RESTORED
-    if (user.noOfLoggedInDevices < 2) {
-      user.noOfLoggedInDevices++;
-    } else {
-      return goodResponseDoc(
-        res,
-        'You are logged in two devices, logout out from them to get access to this account',
-        400,
-        {
-          id: user.queryId,
-          allDevicesLogged: true,
-          loginToken,
-        }
-      );
-    }
+    // if (user.noOfLoggedInDevices < 2) {
+    //   user.noOfLoggedInDevices++;
+    // } else {
+    //   return goodResponseDoc(
+    //     res,
+    //     'You are logged in two devices, logout out from them to get access to this account',
+    //     400,
+    //     {
+    //       id: user.queryId,
+    //       allDevicesLogged: true,
+    //       loginToken,
+    //     }
+    //   );
+    // }
 
     if (user.loginTokens.length > 2) {
       user.loginTokens = [loginToken];
@@ -652,6 +661,7 @@ exports.login = (Model) => async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     const token = await jwtToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
     const doc = {
       user,
       token,
@@ -735,20 +745,20 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     // *DON'T FORGET
     // !IMPORTANT:: super important
 
-    if (user.noOfLoggedInDevices < 2) {
-      user.noOfLoggedInDevices++;
-    } else {
-      return goodResponseDoc(
-        res,
-        'You are logged in two devices, logout out from them to get access to this account',
-        400,
-        {
-          id: user.queryId,
-          allDevicesLogged: true,
-          loginToken,
-        }
-      );
-    }
+    // if (user.noOfLoggedInDevices < 2) {
+    //   user.noOfLoggedInDevices++;
+    // } else {
+    //   return goodResponseDoc(
+    //     res,
+    //     'You are logged in two devices, logout out from them to get access to this account',
+    //     400,
+    //     {
+    //       id: user.queryId,
+    //       allDevicesLogged: true,
+    //       loginToken,
+    //     }
+    //   );
+    // }
 
     const device = await parser(req.headers['user-agent']);
     const clientIp = requestIp.getClientIp(req);

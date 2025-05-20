@@ -20,9 +20,9 @@ exports.createUserCategoryOne = async (req, res, next) => {
     if (!name) {
       return badResponse(res, 'Provide User Category name');
     }
-    if (!description) {
-      return badResponse(res, 'Provide User Category description');
-    }
+    // if (!description) {
+    //   return badResponse(res, 'Provide User Category description');
+    // }
 
     const userCategory = await UserCategory.create({
       name,
@@ -83,7 +83,7 @@ exports.getUserCategoryTwoByOrganization = async (req, res, next) => {
 
     const userCategoryTwo = await UserCategoryTwo.find({
       organization: checkOrganization._id,
-    });
+    }).populate({ path: 'userCategory' });
     if (!userCategoryTwo) {
       return badResponse(res, 'User Category not found');
     }
@@ -125,11 +125,23 @@ exports.getUserCategoryTwoByCategoryOne = async (req, res, next) => {
   }
 };
 
-exports.getAUserCategory = (Model) => async (req, res, next) => {
+exports.getAUserCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide category Id');
-    const category = await Model.findById(id);
+    const category = await UserCategory.findById(id)
+    if (!category) return badResponse(res, 'Category does not exist');
+
+    goodResponseDoc(res, 'category found', 200, category);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAUserCategoryTwo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide category Id');
+    const category = await UserCategoryTwo.findById(id).populate({ path: "userCategory" });
     if (!category) return badResponse(res, 'Category does not exist');
 
     goodResponseDoc(res, 'category found', 200, category);
@@ -157,7 +169,9 @@ exports.getAllUserCategory = async (req, res, next) => {
 
 exports.getAllUserCategoryTwo = async (req, res, next) => {
   try {
-    const userCategory = await UserCategoryTwo.find().populate('organization');
+    const userCategory = await UserCategoryTwo.find()
+      .populate({ path: 'organization' })
+      .populate({ path: 'userCategory' });
     if (!userCategory) {
       return badResponse(res, 'User Category not found');
     }
@@ -196,6 +210,36 @@ exports.updateUserCategory = (Model) => async (req, res, next) => {
       'User Category updated successfully',
       200,
       userCategory
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+exports.updateUserCategoryTwo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, status, description, userCategory } = req.body;
+    const userCategoryTwo = await UserCategoryTwo.findByIdAndUpdate(
+      id,
+      {
+        name,
+        status,
+        description,
+        userCategory
+      },
+      {
+        new: true,
+        runValidators: false,
+      }
+    );
+    if (!userCategoryTwo) {
+      return badResponse(res, 400, 'Failed to update user category');
+    }
+    return goodResponseDoc(
+      res,
+      'User Category updated successfully',
+      200,
+      userCategoryTwo
     );
   } catch (error) {
     next(error);
@@ -275,9 +319,9 @@ exports.createUserCategoryTwo = async (req, res, next) => {
     if (!name) {
       return badResponse(res, 'Provide User Category name');
     }
-    if (!description) {
-      return badResponse(res, 'Provide User Category description');
-    }
+    // if (!description) {
+    //   return badResponse(res, 'Provide User Category description');
+    // }
 
     const userCategoryTwo = await UserCategoryTwo.create({
       name,
@@ -302,8 +346,8 @@ exports.createUserCategoryTwo = async (req, res, next) => {
 
 exports.deleteUserCategory = (Model) => async (req, res, next) => {
   try {
-    const { category } = req.params;
-    const userCategory = await Model.findByIdAndDelete(category);
+    const { id } = req.params;
+    const userCategory = await Model.findByIdAndDelete(id);
 
     if (!userCategory) return badResponse(res, 'This category does not exist');
 
@@ -313,3 +357,19 @@ exports.deleteUserCategory = (Model) => async (req, res, next) => {
     next(error);
   }
 };
+
+exports.deleteCategory = async (req, res, next) => {
+  try{
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide category Id');
+    console.log({id})
+    await UserCategoryTwo.deleteMany({ userCategory: id });
+    const userCategory = await UserCategory.findByIdAndDelete(id);
+
+    if (!userCategory) return badResponse(res, 'This category does not exist');
+
+    goodResponse(res, 'Category deleted successfully');
+  } catch(error){
+    next(error);
+  }
+}

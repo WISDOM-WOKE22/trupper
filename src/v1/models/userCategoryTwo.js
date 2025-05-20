@@ -8,7 +8,7 @@ const userCategorySchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      // required: true,
     },
     organization: {
       type: Schema.Types.ObjectId,

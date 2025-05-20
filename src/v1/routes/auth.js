@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../models/users');
 const Admin = require('../models/admins');
+const { protect } = require('../middlewares/protectRoute')
 const {
   login,
   resetPassword,
@@ -21,6 +22,7 @@ const {
   loginMainUser,
   continueUserAccountCreationByLink,
   generateAndSendUserAuthLink,
+  token
 } = require('../controllers/authentication');
 
 const Router = express.Router();
@@ -38,13 +40,13 @@ Router.route('/login').post(login(User));
 Router.route('/login-admin').post(loginMainUser);
 
 // Login with 2FA
-Router.route('/login-2fa').post(LoginWith2Fa(User));
+Router.route('/login-2fa/:token').post(LoginWith2Fa(User));
 
 // Verify Email
 Router.route('/verify-email/:token').post(verifyEmail(User));
 
 // Logout
-Router.route('/logout').post(Logout);
+Router.route('/logout').post(protect(User), Logout);
 
 // Logout from all devices
 Router.route('/logout-all-devices/:id').post(logOutAllDevices(User));
@@ -85,6 +87,8 @@ Router.route('/forgot-password').post(forgetPassword(User));
 Router.route('/forgot-password-admin').post(forgetPassword(Admin));
 
 Router.route('/add-user').post(generateAndSendUserAuthLink);
+
+Router.route('/token').post(token);
 
 Router.route('/signup-user-link/:id').post(continueUserAccountCreationByLink);
 

@@ -3,11 +3,33 @@ const { badResponse, goodResponseDoc } = require('../utils/response');
 const cloudinary = require('../services/cloudinary');
 // const CbtUser = require('../models/cbtUser');
 
+exports.getAUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'provide User ID');
+    const user = await User.findById(id);
+    if (!user) return badResponse(res, 'user does not exist');
+    goodResponseDoc(res, 'user Found', 200, user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select(
       'queryId email firstName lastName cbt role createdAt'
     );
+    goodResponseDoc(res, 'Users found', 200, users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUsersByOrganization = async (req, res, next) => {
+  try {
+    const { organization } = req.params;
+    const users = await User.find({ organization });
     goodResponseDoc(res, 'Users found', 200, users);
   } catch (error) {
     next(error);
@@ -25,6 +47,42 @@ exports.getUsersName = async (req, res, next) => {
     if (!user) return badResponse(res, 'User does not exist');
 
     goodResponseDoc(res, 'user found', 200, user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.blockAUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isBlocked: true },
+      { runValidators: false }
+    );
+
+    if(!user) return badResponse(res, "User does not exist");
+
+    goodResponseDoc(res, "User blocked", 200, user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unBlockAUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isBlocked: false },
+      { runValidators: false }
+    );
+
+    if(!user) return badResponse(res, "User does not exist");
+
+    goodResponseDoc(res, "User unblocked", 200, user);
   } catch (error) {
     next(error);
   }

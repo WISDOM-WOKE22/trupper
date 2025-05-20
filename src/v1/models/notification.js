@@ -29,6 +29,10 @@ const notificationSchema = new mongoose.Schema(
       enum: ['read', 'unread'],
       default: 'read',
     },
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization"
+    },
     queryId: String,
   },
   {

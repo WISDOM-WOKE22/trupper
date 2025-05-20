@@ -13,12 +13,15 @@ const {
   getUserCategoryByOrganization,
   getUserCategoryTwoByCategoryOne,
   getUserCategoryTwoByOrganization,
+  deleteCategory,
+  getAUserCategoryTwo,
+  updateUserCategoryTwo
 } = require('../controllers/userCategory');
 const { protect } = require('../middlewares/protectRoute');
 
 const Router = express.Router();
 
-Router.use(protect(Admin));
+// Router.use(protect(Admin));
 
 Router.route('/category-one-by-organization/:organization').get(
   getUserCategoryByOrganization
@@ -42,12 +45,12 @@ Router.route('/category-two')
 
 Router.route('/category-one/:id')
   .patch(updateUserCategory(UserCategory))
-  .get(getAUserCategory(UserCategory))
-  .delete(deleteUserCategory(UserCategory));
+  .get(getAUserCategory)
+  .delete(deleteCategory);
 
 Router.route('/category-two/:id')
-  .patch(updateUserCategory(UserCategoryTwo))
-  .get(getAUserCategory(UserCategoryTwo))
+  .patch(updateUserCategoryTwo)
+  .get(getAUserCategoryTwo)
   .delete(deleteUserCategory(UserCategoryTwo));
 
 module.exports = Router;

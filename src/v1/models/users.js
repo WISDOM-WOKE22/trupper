@@ -52,6 +52,12 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ['user'],
+      default: "user"
+    },
+    status: {
+      type: String,
+      enum: [ 'active', 'inactive' ],
+      default: 'active'
     },
     twoFactor: {
       type: Boolean,
@@ -104,11 +110,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['normal', 'google'],
       default: 'normal',
-    },
-    role: {
-      type: String,
-      enum: ['user'],
-      default: 'user',
     },
     loginTokens: [
       {

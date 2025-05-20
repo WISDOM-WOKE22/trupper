@@ -27,6 +27,7 @@ const organizationSchema = new mongoose.Schema({
     enum: [ 'active', "blocked", "suspended" ],
     default: 'active',
   },
+  domain: String,
   admin: String,
   
 },

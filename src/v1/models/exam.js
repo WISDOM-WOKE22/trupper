@@ -55,6 +55,10 @@ const examSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization"
+    },
     queryId: String,
   },
   {
