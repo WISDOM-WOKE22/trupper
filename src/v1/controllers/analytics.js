@@ -57,7 +57,7 @@ exports.getAnalytics = async (req, res, next) => {
         countDocuments(userCategory, { organization: id }),
         countDocuments(userCategoryTwo, { organization: id }),
         countDocuments(ExamTypes, { organization: id }),
-        countDocuments(Admin, { organization: id, role: "admin" }),
+        countDocuments(Admins, { organization: id, role: "admin" }),
   
         // Monthly user signups aggregation
         Users.aggregate([

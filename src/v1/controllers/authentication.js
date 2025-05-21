@@ -261,8 +261,9 @@ exports.createSubAdmin = async (req, res, next) => {
     await subAdmin.save({ validateBeforeSave: false });
 
     const url = `${checkOrganization.domain}/kyc-complete/sub-admin?qrt=${token}`;
+    console.log({ url });
 
-    await new Email(res, subAdmin, url, '').addAdmin();
+    await new Email(res, subAdmin, url).addAdmin();
 
     goodResponse(res, 'Sub Admin Created Successfully');
   } catch (error) {
@@ -476,6 +477,7 @@ exports.completeAdminCreation = async (req, res, next) => {
 exports.getCreatedAdminDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
+    console.log("test:",id)
 
     if (!id) return badResponse(res, 'Provide admin Details');
 

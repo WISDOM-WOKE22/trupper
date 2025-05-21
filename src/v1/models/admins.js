@@ -140,6 +140,8 @@ adminSchema.methods.createVerificationToken = async function () {
     .createHash('sha256')
     .update(token)
     .digest('hex');
+
+    return token;
 };
 
 adminSchema.methods.createResetToken = async function () {

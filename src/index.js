@@ -45,6 +45,7 @@ const authRoute = require('./v1/routes/auth');
 const categoryRoute = require('./v1/routes/category');
 const analyticsRoute = require('./v1/routes/analytics');
 const adminRoute = require('./v1/routes/admin');
+const codeRoute = require('./v1/routes/code');
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/organization', organizationRoute);
@@ -52,6 +53,7 @@ app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/category', categoryRoute);
 app.use('/api/v1/analytics', analyticsRoute);
 app.use('/api/v1/admin', adminRoute);
+app.use('/api/v1/code', codeRoute);
 // app.use()
 
 // Catch-all route for undefined routes

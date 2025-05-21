@@ -67,10 +67,10 @@ Router.route('/reset-password/:token').post(resetPassword(User));
 Router.route('/update-password').post(updatePassword);
 
 // Complete Admin Creation
-Router.route('/complete-admin-creation').post(completeAdminCreation);
+Router.route('/complete-admin-creation/:id').post(completeAdminCreation);
 
 // Get Created Admin Details
-Router.route('/get-created-admin-details').post(getCreatedAdminDetails);
+Router.route('/get-created-admin-details/:id').get(getCreatedAdminDetails);
 
 // Resend 2FA Code
 Router.route('/resend-2fa-code/:token').post(resend2FACode(User));
