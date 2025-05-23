@@ -7,6 +7,7 @@ const requestIp = require('request-ip');
 const Category = require('../models/userCategory');
 const SubCategory = require('../models/userCategoryTwo');
 const crypto = require('crypto');
+const Code = require('../models/code');
 const {
   badResponse,
   goodResponseDoc,
@@ -35,7 +36,7 @@ exports.token = (Model) => async (req, res, next) => {
     const currentUser = await Model.findById(decoded.id);
     if (!currentUser) return badResponse(res, 'Invalid Credentials');
     const newToken = jwtToken(currentUser.id);
-    goodResponseDoc(res, "New Access Token assigned", 200, { token: newToken } )
+    goodResponseDoc(res, 'New Access Token assigned', 200, { token: newToken });
   } catch (error) {
     next(error);
   }
@@ -52,6 +53,7 @@ exports.createUser = async (req, res, next) => {
       organization,
       password,
       confirmPassword,
+      code,
     } = req.body;
 
     if (!firstName) return badResponse(res, 'First Name is missing');
@@ -73,6 +75,10 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Organization not found');
     }
 
+    if(checkOrganization.codeSignUp){
+      if (!code) return badResponse(res, 'Code is required');
+    }
+
     const emailCheck = await User.findOne({
       email,
       organization: checkOrganization.id,
@@ -82,15 +88,37 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Email already used');
     }
 
-    const user = await User.create({
-      firstName,
-      lastName,
-      email: email.toLowerCase(),
-      phone,
-      organization: checkOrganization.id,
-      password,
-      confirmPassword,
-    });
+    const codeCheck = await Code.findOne(code);
+
+    if (!codeCheck) {
+      return badResponse(res, 'Invalid code please check code');
+    }
+
+    let user;
+
+    if (codeCheck) {
+      user = await User.create({
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        phone,
+        organization: checkOrganization.id,
+        password,
+        category: codeCheck.category,
+        subCategory: codeCheck.subCategory,
+        confirmPassword,
+      });
+    } else {
+      user = await User.create({
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        phone,
+        organization: checkOrganization.id,
+        password,
+        confirmPassword,
+      });
+    }
 
     if (!user) return badResponse(res, 'Failed to create user');
     const token = jwtToken(user._id, user.email);
@@ -356,7 +384,7 @@ exports.verifyMainUserAccount = async (req, res, next) => {
     });
 
     const newToken = jwtToken(user._id);
-    const refreshToken = generateRefreshToken(user._id)
+    const refreshToken = generateRefreshToken(user._id);
     const loginToken = randomToken();
     user.loginTokens = loginToken;
     user.verificationCode = undefined;
@@ -477,7 +505,7 @@ exports.completeAdminCreation = async (req, res, next) => {
 exports.getCreatedAdminDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log("test:",id)
+    console.log('test:', id);
 
     if (!id) return badResponse(res, 'Provide admin Details');
 
@@ -588,12 +616,12 @@ exports.login = (Model) => async (req, res, next) => {
       .select('+password')
       .populate({ path: 'organization' });
 
-      if(!user){
-        user = await Admin.findOne({
-          email: email.toLowerCase(),
-          organization: checkOrganization.id,
-        })
-      }
+    if (!user) {
+      user = await Admin.findOne({
+        email: email.toLowerCase(),
+        organization: checkOrganization.id,
+      });
+    }
 
     if (!user || !(await user.correctPassword(password, user.password))) {
       return badResponse(res, 'Incorrect credentials');

@@ -1,6 +1,6 @@
 const Organization = require('../models/organization');
 const Code = require('../models/code');
-const { badResponse, goodResponseDoc } = require('../utils/response');
+const { badResponse, goodResponseDoc, goodResponse } = require('../utils/response');
 const { generateCode, generateUniqueCodes } = require('../utils/generate');
 
 exports.generateSingleCode = async (req, res, next) => {
@@ -71,7 +71,7 @@ exports.generateBulkCodes = async (req, res, next) => {
       res,
       `Successfully created ${newCodes.insertedCount} codes`,
       201,
-      newCodes.insertedIds
+      newCodes.mongoose.results
     );
   } catch (error) {
     next(error);

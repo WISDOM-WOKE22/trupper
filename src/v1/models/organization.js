@@ -27,6 +27,22 @@ const organizationSchema = new mongoose.Schema({
     enum: [ 'active', "blocked", "suspended" ],
     default: 'active',
   },
+  enableSignup: {
+    type: Boolean,
+    default: false,
+  },
+  codeSignUp: {
+    type: boolean,
+    default: false,
+  },
+  defaultCategory: {
+    type: Schema.Types.ObjectId,
+    ref: 'UserCategory',
+  },
+  defaultSubCategory: {
+    type: Schema.Types.ObjectId,
+    ref: 'UserCategoryTwo',
+  },
   domain: String,
   admin: String,
   
