@@ -59,6 +59,14 @@ const examSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Organization"
     },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "UserCategory"
+    },
+    subCategory: {
+      type: Schema.Types.ObjectId,
+      ref: "UserCategoryTwo"
+    },
     queryId: String,
   },
   {

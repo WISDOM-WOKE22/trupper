@@ -75,6 +75,10 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Organization not found');
     }
 
+    if(!checkOrganization.enableSignup){
+      return badResponse(res, "Signup has been disabled for this organization")
+    }
+
     if(checkOrganization.codeSignUp){
       if (!code) return badResponse(res, 'Code is required');
     }
@@ -88,7 +92,7 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Email already used');
     }
 
-    const codeCheck = await Code.findOne(code);
+    const codeCheck = await Code.findOne({code});
 
     if (!codeCheck) {
       return badResponse(res, 'Invalid code please check code');

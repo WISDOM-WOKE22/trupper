@@ -32,7 +32,7 @@ const organizationSchema = new mongoose.Schema({
     default: false,
   },
   codeSignUp: {
-    type: boolean,
+    type: Boolean,
     default: false,
   },
   defaultCategory: {
