@@ -6,7 +6,7 @@ const examSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     acronym: {
       type: String,
@@ -41,6 +41,9 @@ const examSchema = new mongoose.Schema(
       default: 1,
     },
     noOfQuestions: {
+      type: Number,
+    },
+    scoreMultiplier: {
       type: Number,
     },
     questionYear: {
