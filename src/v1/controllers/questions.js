@@ -4,14 +4,17 @@ const { goodResponseDoc, badResponse } = require('../utils/response');
 const { consoleError } = require('../utils/console');
 const { deleteOne, updateOne, createOne } = require('../utils/factoryFunction');
 const cloudinary = require('../services/cloudinary');
+const { uploadImage } = require('../utils/image');
 // const { organizationCheck } = require('../utils/checks');
 
 exports.createQuestion = async (req, res, next) => {
-  console.log(req.body)
   try {
     const {
       question,
-      options,
+      a,
+      b,
+      c,
+      d,
       subject,
       examyear,
       section,
@@ -20,45 +23,27 @@ exports.createQuestion = async (req, res, next) => {
       questionCategory,
       reason,
       organization,
+      exam,
     } = req.body;
 
     if (!question) return badResponse(res, 'Please provide a question');
-    if (!options) return badResponse(res, 'Please create options for this question');
-
-    let parsedOptions;
-    try {
-      parsedOptions = JSON.parse(options);
-      if (!Array.isArray(parsedOptions) || parsedOptions.length < 3) {
-        return badResponse(res, 'A question must have at least 3 options');
-      }
-    } catch (err) {
-      return badResponse(res, 'Invalid options format. Must be a JSON array');
-    }
 
     if (!subject) return badResponse(res, 'Select the subject it belongs to');
     if (!answer) return badResponse(res, 'Select an answer');
-
-    // Optionally enable:
-    // if (!organizationCheck(res, organization)) return;
 
     const sub = await Subject.findById(subject);
     if (!sub) return badResponse(res, 'This subject does not exist');
 
     let image = '';
     if (req.file && req.file.path) {
-      try {
-        const result = await cloudinary.uploader.upload(req.file.path, { folder: 'uploads' });
-        image = result.secure_url;
-      } catch (err) {
-        consoleError(err);
-        return badResponse(res, 'Failed to upload image');
-      }
+      image = await uploadImage(req);
     }
+    console.log({ image });
 
     const questionDoc = await Question.create({
       question,
       subject: sub._id,
-      options: parsedOptions,
+      options: { a, b, c, d },
       questionType,
       examyear,
       section,
@@ -67,23 +52,33 @@ exports.createQuestion = async (req, res, next) => {
       questionCategory: questionCategory || 'paid',
       reason,
       organization,
+      exam,
     });
 
-    return goodResponseDoc(res, 'Question created successfully', 201, questionDoc);
+    return goodResponseDoc(
+      res,
+      'Question created successfully',
+      201,
+      questionDoc
+    );
   } catch (error) {
     consoleError(error);
     return next(error);
   }
 };
 
-exports.AddQuestion = createOne(Question)
+exports.AddQuestion = createOne(Question);
 
 exports.getAQuestion = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide Question QueryId');
 
-    const question = await Question.findOne({ queryId: id }).populate('subject');
+    const question = await Question.findById(id)
+      .populate({
+        path: 'subject',
+      })
+      .populate({ path: 'exam' });
     if (!question) return badResponse(res, 'Question not found');
 
     return goodResponseDoc(res, 'Question found', 200, question);
@@ -115,8 +110,15 @@ exports.getQuestionsByOrganization = async (req, res, next) => {
     // Optionally enable:
     // if (!organizationCheck(res, organization)) return;
 
-    const questions = await Question.find({ organization });
-    return goodResponseDoc(res, 'Questions retrieved successfully', 200, questions);
+    const questions = await Question.find({ organization }).populate({
+      path: 'subject',
+    });
+    return goodResponseDoc(
+      res,
+      'Questions retrieved successfully',
+      200,
+      questions
+    );
   } catch (error) {
     return next(error);
   }
@@ -134,5 +136,81 @@ exports.getQuestionsBySubject = async (req, res, next) => {
   }
 };
 
-exports.deleteAQuestion = deleteOne(Question);
-exports.updateQuestion = updateOne(Question);
+exports.deleteAQuestion = async (req, res, next) => {
+  try{
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide subject ID');
+
+    const questions = await Question.findByIdAndDelete(id);
+    return goodResponseDoc(res, 'Question Deleted Successfully', 200, questions);
+  } catch (error) {
+    return next(error);
+}
+}
+
+exports.updateQuestion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const {
+      question,
+      a,
+      b,
+      c,
+      d,
+      subject,
+      examyear,
+      section,
+      questionType,
+      answer,
+      questionCategory,
+      reason,
+      organization,
+      exam,
+    } = req.body;
+
+    if (!id) return badResponse(res, 'Provide Question ID');
+    if (!question) return badResponse(res, 'Please provide a question');
+    if (!subject) return badResponse(res, 'Select the subject it belongs to');
+    if (!answer) return badResponse(res, 'Select an answer');
+
+    const sub = await Subject.findById(subject);
+    if (!sub) return badResponse(res, 'This subject does not exist');
+
+    const existingQuestion = await Question.findById(id);
+    if (!existingQuestion) return badResponse(res, 'Question not found');
+
+    let image = existingQuestion.image;
+    if (req.file && req.file.path) {
+      image = await uploadImage(req);
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      id,
+      {
+        question,
+        subject: sub._id,
+        options: { a, b, c, d },
+        questionType,
+        examyear,
+        section,
+        answer,
+        image,
+        questionCategory: questionCategory || 'paid',
+        reason,
+        organization,
+        exam,
+      },
+      { new: true, runValidators: true }
+    ).populate('subject').populate('exam');
+
+    return goodResponseDoc(
+      res,
+      'Question updated successfully',
+      200,
+      updatedQuestion
+    );
+  } catch (error) {
+    consoleError(error);
+    return next(error);
+  }
+};

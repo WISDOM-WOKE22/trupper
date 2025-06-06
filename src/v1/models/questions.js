@@ -7,15 +7,13 @@ const questionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    options: [
-      {
+    options: {
         a: String,
         b: String,
         c: String,
         d: String,
         e: String,
       },
-    ],
     subject: {
       type: Schema.Types.ObjectId,
       ref: 'Subject',
@@ -29,7 +27,11 @@ const questionSchema = new mongoose.Schema(
     },
     examtype: {
       type: Schema.Types.ObjectId,
-      ref: 'Subject',
+      ref: 'ExamType',
+    },
+    exam: {
+      type: Schema.Types.ObjectId,
+      ref: 'Exam',
     },
     solution: String,
     examyear: Number,
@@ -48,7 +50,8 @@ const questionSchema = new mongoose.Schema(
     },
     questionType: {
       type: String,
-      enum: ['Objective', 'Theory', 'Sub-objective'],
+      enum: ['objective', 'theory', 'sub-objective'],
+      default: 'objective'
     },
     queryId: String,
     status: Boolean,

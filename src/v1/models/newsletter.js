@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const Schema = mongoose.Schema
 
-const newsLetterSchema = new mongoose.Schema(
+const newsLetterSchema = new Schema(
   {
     title: {
       type: String,
@@ -18,7 +19,7 @@ const newsLetterSchema = new mongoose.Schema(
     userType: {
       type: String,
       required: true,
-      enum: ['users', 'sales-agents'],
+      enum: ['users', 'admins'],
     },
     status: {
       type: String,
@@ -28,8 +29,20 @@ const newsLetterSchema = new mongoose.Schema(
     queryId: String,
     organization: {
       type: Schema.Types.ObjectId,
-      ref: "Organization"
+      ref: 'Organization',
     },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: 'UserCategory',
+    },
+    subCategory: {
+      type: Schema.Types.ObjectId,
+      ref: 'UserCategoryTwo',
+    },
+    sentBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    }
   },
   {
     timestamps: true,

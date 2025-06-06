@@ -9,8 +9,9 @@ const {
   updateQuestion
 } = require('../controllers/questions');
 const Router = express.Router();
+const upload = require('../middlewares/multer');
 
-Router.route('/').get(getAllQuestions).post(createQuestion);
+Router.route('/').get(getAllQuestions).post(upload.single('image'),createQuestion);
 
 Router.route('/:id')
   .get(getAQuestion)

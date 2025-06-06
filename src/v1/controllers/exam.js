@@ -1,15 +1,17 @@
 const Exam = require('../models/exam');
 const Organization = require('../models/organization');
-const cloudinary = require('../services/cloudinary');
+
 const {
   goodResponse,
   badResponse,
   goodResponseDoc,
 } = require('../utils/response');
 const mongoose = require('mongoose');
+const { uploadImage } = require('../utils/image');
 
 exports.createExam = async (req, res, next) => {
   try {
+    console.log(req.body);
     const {
       name,
       examType,
@@ -94,24 +96,7 @@ exports.createExam = async (req, res, next) => {
       );
 
     // Handle image upload
-    let image = '';
-    if (req.file) {
-      try {
-        await cloudinary.api.resources({
-          type: 'upload',
-          max_results: 10,
-        });
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'Uploads',
-        });
-        image = result.secure_url;
-      } catch (err) {
-        console.log(err);
-        return badResponse(res, 'Failed to upload image to Cloudinary');
-      }
-    } else {
-      return badResponse(res, 'Image is required');
-    }
+    let image = uploadImage(req);
 
     // Create exam in the database
     const exam = await Exam.create({
@@ -171,12 +156,7 @@ exports.updateExam = async (req, res, next) => {
     const examTypeObjectId = new mongoose.Types.ObjectId(examType);
 
     if (imageTest) {
-      await cloudinary.uploader
-        .upload(req.file.path, { folder: 'uploads' })
-        .then((result) => {
-          image = result.secure_url;
-        })
-        .catch((err) => console.log(err));
+      image = uploadImage(req);
     }
 
     const exam = await Exam.findOneAndUpdate(
@@ -229,7 +209,7 @@ exports.getAnExam = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide Exam ID');
-    const exam = await Exam.findById(id).populate({ path: "examType" });
+    const exam = await Exam.findById(id).populate({ path: 'examType' });
     if (!exam) badResponse(res, 'Exam not found');
     goodResponseDoc(res, 'Exam retrieved successfully', 200, exam);
   } catch (error) {
