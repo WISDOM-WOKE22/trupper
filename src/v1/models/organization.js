@@ -45,7 +45,7 @@ const organizationSchema = new mongoose.Schema({
   },
   domain: String,
   admin: String,
-  
+  defaultPassword: String,
 },
 {
   timestamps: true,

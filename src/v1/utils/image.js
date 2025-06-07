@@ -1,6 +1,7 @@
 const cloudinary = require('../services/cloudinary');
+const { badResponse } = require('../utils/response')
 
-exports.uploadImage = async (req) => {
+exports.uploadImage = async (req, res) => {
   if (req.file) {
     console.log(req.file)
     try {
@@ -11,6 +12,7 @@ exports.uploadImage = async (req) => {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: 'Uploads',
       });
+      console.log(result.secure_url)
       return result.secure_url;
     } catch (err) {
       console.log(err);

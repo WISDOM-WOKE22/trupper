@@ -36,7 +36,7 @@ exports.createQuestion = async (req, res, next) => {
 
     let image = '';
     if (req.file && req.file.path) {
-      image = await uploadImage(req);
+      image = await uploadImage(req, res);
     }
     console.log({ image });
 
@@ -181,7 +181,7 @@ exports.updateQuestion = async (req, res, next) => {
 
     let image = existingQuestion.image;
     if (req.file && req.file.path) {
-      image = await uploadImage(req);
+      image = await uploadImage(req, res);
     }
 
     const updatedQuestion = await Question.findByIdAndUpdate(

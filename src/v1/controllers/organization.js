@@ -1,4 +1,5 @@
 const Organization = require('../models/organization');
+const { uploadImage } = require('../utils/image');
 
 const {
   badResponse,
@@ -21,7 +22,7 @@ exports.createOrganization = async (req, res, next) => {
 
     const organization = await Organization.create({
       name,
-      email
+      email,
     });
     if (!organization) {
       return badResponse(res, 400, 'Failed to create organization');
@@ -65,7 +66,7 @@ exports.getAnOrganization = async (req, res, next) => {
 };
 
 exports.getAnOrganizationByDomain = async (req, res, next) => {
-  try{
+  try {
     const { domain } = req.params;
     const organization = await Organization.findOne({ domain });
     if (!organization) {
@@ -83,10 +84,8 @@ exports.getAnOrganizationByDomain = async (req, res, next) => {
       200,
       organization
     );
-  } catch(error){
-
-  }
-}
+  } catch (error) {}
+};
 
 exports.getAllOrganizations = async (req, res, next) => {
   try {
@@ -106,9 +105,9 @@ exports.getAllOrganizations = async (req, res, next) => {
 exports.suspendOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id)
+    console.log(id);
     const organization = await Organization.findByIdAndUpdate(
-      id ,
+      id,
       { status: 'suspended' },
       { runValidators: false }
     );
@@ -140,6 +139,59 @@ exports.unsuspendOrganization = async (req, res, next) => {
     return goodResponseDoc(
       res,
       'Organization Activated successfully',
+      200,
+      organization
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateOrganization = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide Organization ID');
+    const {
+      name,
+      theme,
+      enableSignup,
+      codeSignup,
+      defaultCategory,
+      defaultSubCategory,
+      domain,
+      defaultPassword,
+    } = req.body;
+
+    const organizationCheck = Organization.findById(id); 
+    if (!organizationCheck) return badResponse(res, 'Organization does not exist');
+
+
+    console.log('update testing.....', req.file);
+
+    let image = organizationCheck.logo;
+    if (req.file && req.file.path) {
+      image = await uploadImage(req, res);
+    }
+
+    const organization = await Organization.findByIdAndUpdate(
+      id,
+      {
+        name,
+        theme,
+        enableSignup,
+        codeSignup,
+        defaultCategory,
+        defaultPassword,
+        domain,
+        defaultSubCategory,
+        logo: image,
+      },
+      { runValidators: false, new: false }
+    );
+    
+    goodResponseDoc(
+      res,
+      'Organization Updated successfully',
       200,
       organization
     );

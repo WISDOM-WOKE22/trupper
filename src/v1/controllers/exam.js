@@ -96,7 +96,7 @@ exports.createExam = async (req, res, next) => {
       );
 
     // Handle image upload
-    let image = uploadImage(req);
+    let image = await uploadImage(req, res);
 
     // Create exam in the database
     const exam = await Exam.create({
@@ -156,7 +156,7 @@ exports.updateExam = async (req, res, next) => {
     const examTypeObjectId = new mongoose.Types.ObjectId(examType);
 
     if (imageTest) {
-      image = uploadImage(req);
+      image = uploadImage(req, res);
     }
 
     const exam = await Exam.findOneAndUpdate(
