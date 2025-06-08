@@ -95,8 +95,8 @@ const adminSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'sub_admin'],
-      default: 'admin',
+      enum: ['ADMIN', 'SUB_ADMIN'],
+      default: 'ADMIN',
     },
     loginTokens: [
       {
