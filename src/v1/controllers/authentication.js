@@ -56,6 +56,8 @@ exports.createUser = async (req, res, next) => {
       code,
     } = req.body;
 
+    let codeCheck;
+
     if (!firstName) return badResponse(res, 'First Name is missing');
     if (!lastName) return badResponse(res, 'Last Name is Required');
     if (!email) return badResponse(res, 'Enter contact information');
@@ -81,6 +83,11 @@ exports.createUser = async (req, res, next) => {
 
     if(checkOrganization.codeSignUp){
       if (!code) return badResponse(res, 'Code is required');
+      codeCheck = await Code.findOne({code});
+  
+      if (!codeCheck) {
+        return badResponse(res, 'Invalid code please check code');
+      }
     }
 
     const emailCheck = await User.findOne({
@@ -92,15 +99,10 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Email already used');
     }
 
-    const codeCheck = await Code.findOne({code});
-
-    if (!codeCheck) {
-      return badResponse(res, 'Invalid code please check code');
-    }
 
     let user;
 
-    if (codeCheck) {
+    if (checkOrganization.codeSignUp && codeCheck) {
       user = await User.create({
         firstName,
         lastName,
@@ -120,6 +122,8 @@ exports.createUser = async (req, res, next) => {
         phone,
         organization: checkOrganization.id,
         password,
+        category: checkOrganization.defaultCategory ?? undefined,
+        subCategory: checkOrganization.defaultSubCategory ?? undefined,
         confirmPassword,
       });
     }

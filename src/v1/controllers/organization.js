@@ -151,22 +151,22 @@ exports.updateOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide Organization ID');
-    const {
-      name,
-      theme,
-      enableSignup,
-      codeSignup,
-      defaultCategory,
-      defaultSubCategory,
-      domain,
-      defaultPassword,
-    } = req.body;
+    // const {
+    //   name,
+    //   theme,
+    //   enableSignup,
+    //   codeSignup,
+    //   defaultCategory,
+    //   defaultSubCategory,
+    //   domain,
+    //   defaultPassword,
+    // } = req.body;
 
-    const organizationCheck = Organization.findById(id); 
-    if (!organizationCheck) return badResponse(res, 'Organization does not exist');
+    // console.log(enableSignup, codeSignup, req.body);
 
-
-    console.log('update testing.....', req.file);
+    const organizationCheck = Organization.findById(id);
+    if (!organizationCheck)
+      return badResponse(res, 'Organization does not exist');
 
     let image = organizationCheck.logo;
     if (req.file && req.file.path) {
@@ -176,24 +176,19 @@ exports.updateOrganization = async (req, res, next) => {
     const organization = await Organization.findByIdAndUpdate(
       id,
       {
-        name,
-        theme,
-        enableSignup,
-        codeSignup,
-        defaultCategory,
-        defaultPassword,
-        domain,
-        defaultSubCategory,
+        ...req.body,
         logo: image,
       },
       { runValidators: false, new: false }
     );
-    
+
+    const data = await Organization.findById(organization.id); 
+
     goodResponseDoc(
       res,
       'Organization Updated successfully',
       200,
-      organization
+      data
     );
   } catch (error) {
     next(error);
