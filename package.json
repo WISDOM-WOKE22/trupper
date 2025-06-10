@@ -6,12 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --exec babel-node ./src/index.js",
-    "start": "NODE_ENV=production babel-node /src/index.js",
+    "start": "NODE_ENV=production babel-node ./src/index.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write ./src"
   },
   "keywords": [
-    "Amidarh"
+    "Amidarh",
+    "Trupper",
+    "Trupper by Amidarh"
   ],
   "author": "amidarh innovation",
   "license": "ISC",

@@ -29,9 +29,13 @@ exports.createOrganization = async (req, res, next) => {
       return badResponse(res, 400, 'Failed to create organization');
     }
 
-    const url = `${req.protocol}://${organization.name}.${process.env.HOST}`
+    // const url = `${req.protocol}://${organization.name}.${process.env.HOST}/onboarding/personnel`
+    const url = `${req.protocol}://localhost:3000/onboarding/personnel`
 
-    await new Email(res, "", url, '').newOrganization()
+    organization.domain = process.env.NODE_ENV === "production" ? `${organization.name.toLocaleLowerCase}.${process.env.HOST}` : "localhost:3000";
+    await organization.save({ validateBeforeSave: false });
+
+    await new Email(res, organization, url).welcomeOrganization()
 
     return goodResponseDoc(
       res,

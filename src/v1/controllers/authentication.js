@@ -319,7 +319,6 @@ exports.createMainUserAccount = async (req, res, next) => {
       phone,
       password,
       confirmPassword,
-      organizationName,
     } = req.body;
     if (!firstName) return badResponse(res, 'First Name is missing');
     if (!lastName) return badResponse(res, 'Last Name is Required');
@@ -332,8 +331,7 @@ exports.createMainUserAccount = async (req, res, next) => {
     if (password !== confirmPassword)
       return badResponse(res, "Passwords don't match");
 
-    if (!organizationName)
-      return badResponse(res, 'Please provide an organization Name');
+    const loginToken = randomToken();
 
     const admin = await Admin.create({
       firstName,
@@ -352,13 +350,16 @@ exports.createMainUserAccount = async (req, res, next) => {
     await admin.save({ validateBeforeSave: false });
     // await new Email(res, admin, '', verificationCode).verifyEmail();
 
-    const token = multiplePayLoadJwtToken({
-      id: admin._id,
-      email: admin.email,
-      organizationName,
-    });
+    // const token = multiplePayLoadJwtToken({
+    //   id: admin._id,
+    //   email: admin.email,
+    //   organizationName,
+    // });
 
-    goodResponseDoc(res, 'Account created successfully', 201, { token });
+    const token = await jwtToken(admin._id);
+    const refreshToken = await generateRefreshToken(admin._id);
+
+    goodResponseDoc(res, 'Account created successfully', 201, { token, user:admin, refreshToken, loginToken  });
   } catch (error) {
     next(error);
   }

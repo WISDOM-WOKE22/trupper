@@ -108,16 +108,23 @@ module.exports = class Email {
   }
 
   async newOrganization() {
-    await this.send(
-      "newOrganization"
-      `Welcome to Trupper by Amidarh`
-    )
+    await this.send('organization', `Welcome to ${this.organization} by Amidarh`);
+  }
+
+  async organization() {
+    await this.send('newOrganization', `Welcome to ${this.organization} by Amidarh`);
   }
 
   async welcome() {
     await this.send(
       'welcome',
       `🎉 Welcome to ${this.organization} - Unlock Your Learning Potential! 🚀`
+    );
+  }
+  async welcomeOrganization() {
+    await this.send(
+      'newOrganization',
+      `Welcome to ${this.organization} by Organization`
     );
   }
 };

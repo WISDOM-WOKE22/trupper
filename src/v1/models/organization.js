@@ -46,6 +46,12 @@ const organizationSchema = new mongoose.Schema({
   domain: String,
   admin: String,
   defaultPassword: String,
+  description: String,
+  usersRange: String,
+  phone: String,
+  country: String,
+  staffRange: String,
+  isOnboarded: Boolean
 },
 {
   timestamps: true,
