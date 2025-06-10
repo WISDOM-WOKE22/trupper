@@ -1,5 +1,6 @@
 const Organization = require('../models/organization');
 const { uploadImage } = require('../utils/image');
+const Email = require("../services/email/email")
 
 const {
   badResponse,
@@ -27,6 +28,11 @@ exports.createOrganization = async (req, res, next) => {
     if (!organization) {
       return badResponse(res, 400, 'Failed to create organization');
     }
+
+    const url = `${req.protocol}://${organization.name}.${process.env.HOST}`
+
+    await new Email(res, "", url, '').newOrganization()
+
     return goodResponseDoc(
       res,
       'Organization created successfully',

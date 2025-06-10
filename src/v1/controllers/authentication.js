@@ -348,8 +348,9 @@ exports.createMainUserAccount = async (req, res, next) => {
 
     const verificationCode = generateCode();
     admin.verificationCode = verificationCode;
+    admin.isVerified = true
     await admin.save({ validateBeforeSave: false });
-    await new Email(res, admin, '', verificationCode).verifyEmail();
+    // await new Email(res, admin, '', verificationCode).verifyEmail();
 
     const token = multiplePayLoadJwtToken({
       id: admin._id,

@@ -107,6 +107,13 @@ module.exports = class Email {
     );
   }
 
+  async newOrganization() {
+    await this.send(
+      "newOrganization"
+      `Welcome to Trupper by Amidarh`
+    )
+  }
+
   async welcome() {
     await this.send(
       'welcome',
