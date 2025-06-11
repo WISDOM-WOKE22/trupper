@@ -422,6 +422,9 @@ exports.loginMainUser = async (req, res, next) => {
     if (!password) return badResponse(res, 'Provide Password');
     if (password.length <= 7)
       return badResponse(res, 'Password should be up to 8 characters');
+    
+    const clientIp = requestIp.getClientIp(req);
+    const device = await parser(req.headers['user-agent']);
 
     const user = await Admin.findOne({
       email: email.toLowerCase(),
@@ -435,6 +438,29 @@ exports.loginMainUser = async (req, res, next) => {
       return badResponse(res, 'Account Temporary suspended');
     }
 
+    if (user.twoFactor) {
+      consoleMessage('2FA mail sent');
+      const verificationCode = generateCode();
+      const token = jwtToken(user._id);
+      user.twoFactorVerificationCode = verificationCode;
+      await user.save({ validateBeforeSave: false });
+      await new Email(
+        res,
+        user,
+        'Hello there',
+        verificationCode
+      ).twoFactorLoginUser();
+      return goodResponseDoc(
+        res,
+        'Complete login with the code sent to email',
+        203,
+        { twoFactor: true, token }
+      );
+    }
+
+    user.lastLogin = Date.now();
+    user.loginDetails = [{ device, clientIp }];
+    await user.save({ validateBeforeSave: false });
     const token = await jwtToken(user._id);
     const refreshToken = await generateRefreshToken(user._id);
     const loginToken = randomToken();
@@ -449,6 +475,7 @@ exports.loginMainUser = async (req, res, next) => {
       loginToken,
     };
     req.user = user;
+    console.log(doc)
     goodResponseDoc(res, 'You are logged in', 200, doc);
   } catch (error) {
     next(error);
@@ -768,7 +795,7 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     if (!twoFactorVerificationCode)
       return badResponse(res, 'Provide verification code');
     const decodedToken = await verifyJwt(token);
-    const user = await User.findOne({
+    const user = await Model.findOne({
       _id: decodedToken.id,
       twoFactorVerificationCode,
     });
@@ -874,17 +901,23 @@ exports.forgetPassword = (Model) => async (req, res) => {
     if (!checkOrganization) {
       return badResponse(res, 'Organization not found');
     }
-
     const user = await Model.findOne({
       email: email.toLowerCase(),
-      organization: checkOrganization.id,
+      // organization: checkOrganization.id,
     }).populate({ path: 'organization' });
     if (!user) return badResponse(res, 'Account does not exist');
     const resetToken = await user.createResetToken();
 
     await user.save({ validateBeforeSave: false });
-    const url = `${process.env.WEB_URL}/password-reset?token=${resetToken}`;
-    await new Email(res, user, url).forgetPasswordUser();
+    let url;
+    console.log(user.role)
+    if(user.role !== "User" || user.role !== "user"){
+      url = `${process.env.WEB_URL}/admin-controller/password-reset?token=${resetToken}`;
+    } else{
+      url = `${process.env.WEB_URL}/password-reset?token=${resetToken}`;
+    };
+    console.log({url});
+    // await new Email(res, user, url).forgetPasswordUser();
     consoleMessage({ resetToken });
     goodResponse(res, 'Password reset Link sent to email');
   } catch (error) {

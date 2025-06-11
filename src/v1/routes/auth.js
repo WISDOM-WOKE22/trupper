@@ -37,16 +37,23 @@ Router.route('/verify-admin/:token').post(verifyMainUserAccount);
 Router.route('/login').post(login(User));
 
 // Login
+// Router.route('/login-admin').post(loginMainUser);
 Router.route('/login-admin').post(loginMainUser);
 
 // Login with 2FA
 Router.route('/login-2fa/:token').post(LoginWith2Fa(User));
+
+// Login with 2FA
+Router.route('/admin-login-2fa/:token').post(LoginWith2Fa(Admin));
 
 // Verify Email
 Router.route('/verify-email/:token').post(verifyEmail(User));
 
 // Logout
 Router.route('/logout').post(protect(User), Logout);
+
+// Logout Admin
+Router.route('/logout-admin').post(protect(Admin), Logout);
 
 // Logout from all devices
 Router.route('/logout-all-devices/:id').post(logOutAllDevices(User));
@@ -63,6 +70,9 @@ Router.route('/signup').post(createUser);
 // Reset Password
 Router.route('/reset-password/:token').post(resetPassword(User));
 
+// Admin Reset Password 
+Router.route('/admin-reset-password/:token').post(resetPassword(Admin));
+
 // Update Password
 Router.route('/update-password').post(updatePassword);
 
@@ -74,6 +84,8 @@ Router.route('/get-created-admin-details/:id').get(getCreatedAdminDetails);
 
 // Resend 2FA Code
 Router.route('/resend-2fa-code/:token').post(resend2FACode(User));
+
+Router.route('/admin-resend-2fa-code/:token').post(resend2FACode(Admin));
 
 // Resent Email Verification Code
 Router.route('/resend-email-verification-code/:token').post(
