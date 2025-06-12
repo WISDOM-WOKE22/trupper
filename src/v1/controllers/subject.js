@@ -1,4 +1,5 @@
 const Exam = require('../models/exam');
+const CategorySubject = require('../models/categorySubject');
 const Subject = require('../models/subject');
 const {
   badResponse,
@@ -41,7 +42,16 @@ exports.updateSubject = async (req, res, next) => {
     const subject = await Subject.findByIdAndUpdate(id, req.body, {
       runValidators: false,
     });
-     if (!subject) return badResponse(res, 'Subject not found');
+    if (!subject) return badResponse(res, 'Subject not found');
+
+    await CategorySubject.updateMany(
+      {
+        subject: subject._id,
+      },
+      { active: req.body.status },
+      { validateBeforeSave: false, runValidators: false }
+    );
+
     goodResponseDoc(res, 'Subject found', 200, subject);
   } catch (error) {
     next(error);
@@ -49,14 +59,14 @@ exports.updateSubject = async (req, res, next) => {
 };
 
 exports.deleteSubject = async (req, res, next) => {
-  try{
+  try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Please provide subject query Id');
     const subject = await Subject.findByIdAndDelete(id);
     if (!subject) return badResponse(res, 'Subject not found');
-    goodResponse(res, "Subject Deleted Successfully")
-  } catch(error){
-    next(error)
+    goodResponse(res, 'Subject Deleted Successfully');
+  } catch (error) {
+    next(error);
   }
 };
 

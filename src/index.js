@@ -51,6 +51,7 @@ const examRoute = require('./v1/routes/exam')
 const subjectRoute = require('./v1/routes/subject');
 const questionRoute = require('./v1/routes/question');
 const newsletterRoute = require('./v1/routes/newsletter');
+const examCategoryRoute = require('./v1/routes/examCategory');
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/organization', organizationRoute);
@@ -64,6 +65,7 @@ app.use('/api/v1/exams', examRoute)
 app.use('/api/v1/subjects', subjectRoute);
 app.use('/api/v1/questions', questionRoute);
 app.use('/api/v1/newsletter', newsletterRoute);
+app.use('/api/v1/exam-category', examCategoryRoute);
 
 // Catch-all route for undefined routes
 app.use('/api/v1/test', (req, res) => {

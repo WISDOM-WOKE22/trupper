@@ -2,10 +2,19 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const crypto = require('crypto');
 
-const examCategorySchema = new mongoose.Schema(
+const CategorySubjectSchema = new mongoose.Schema(
   {
     name: {
-      type: String
+      type: String,
+      required: true,
+    },
+    subject: {
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
     exam: {
       type: Schema.Types.ObjectId,
@@ -15,18 +24,9 @@ const examCategorySchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'ExamType',
     },
-    subjects: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'CategorySubject',
-      },
-    ],
     organization: {
       type: Schema.Types.ObjectId,
       ref: "Organization"
-    },
-    status: {
-      type: Boolean,
     },
     queryId: String,
   },
@@ -37,11 +37,14 @@ const examCategorySchema = new mongoose.Schema(
   }
 );
 
-examCategorySchema.pre('save', async function (next) {
+CategorySubjectSchema.pre('save', async function (next) {
   this.queryId = await crypto.randomBytes(20).toString('hex');
   next();
 });
 
-const ExamCategory = mongoose.model('ExamCategory', examCategorySchema);
+const CategorySubject = mongoose.model(
+  'CategorySubject',
+  CategorySubjectSchema
+);
 
-module.exports = ExamCategory;
+module.exports = CategorySubject;

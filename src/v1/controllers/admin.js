@@ -4,7 +4,6 @@ const { badResponse, goodResponseDoc } = require("../utils/response");
 exports.getAllAdminsByOrganization = async (req, res, next) => {
     try{
         const { organizationId } = req.params;
-        console.log(organizationId);
         const admins = await Admin.find({ organization : organizationId });
         if (!admins || admins.length === 0) {
             return badResponse(res, "No admins found for this organization");

@@ -218,8 +218,6 @@ exports.continueUserAccountCreationByLink = async (req, res, next) => {
       .update(id)
       .digest('hex');
 
-    console.log({ hashedToken });
-
     const user = await User.findOne({ verificationToken: hashedToken });
 
     if (!user) return badResponse(res, 'Invalid Credentials provided');
@@ -297,7 +295,6 @@ exports.createSubAdmin = async (req, res, next) => {
     await subAdmin.save({ validateBeforeSave: false });
 
     const url = `${req.protocol}://${checkOrganization.domain}/kyc-complete/sub-admin?qrt=${token}`;
-    console.log({ url });
 
     await new Email(res, subAdmin, url, checkOrganization).addAdmin();
 
@@ -386,7 +383,6 @@ exports.verifyMainUserAccount = async (req, res, next) => {
         'Account has been temporary suspended'
       );
     if (user.isVerified) return badResponse(res, 'Account already verified');
-    console.log(decodedToken);
 
     const organization = await Organization.create({
       name: decodedToken.organizationName,
@@ -475,7 +471,6 @@ exports.loginMainUser = async (req, res, next) => {
       loginToken,
     };
     req.user = user;
-    console.log(doc)
     goodResponseDoc(res, 'You are logged in', 200, doc);
   } catch (error) {
     next(error);
@@ -542,7 +537,6 @@ exports.completeAdminCreation = async (req, res, next) => {
 exports.getCreatedAdminDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log('test:', id);
 
     if (!id) return badResponse(res, 'Provide admin Details');
 
@@ -627,7 +621,6 @@ exports.resendEmailVerificationCode = (Model) => async (req, res, next) => {
 exports.login = (Model) => async (req, res, next) => {
   try {
     const { email, password, organization } = req.body;
-    // console.log(req.body)
     const loginToken = randomToken();
     if (!email) return badResponse(res, 'Provide Email');
     if (!organization) return badResponse(res, 'Provide Organization Id');
@@ -910,13 +903,11 @@ exports.forgetPassword = (Model) => async (req, res) => {
 
     await user.save({ validateBeforeSave: false });
     let url;
-    console.log(user.role)
     if(user.role !== "User" || user.role !== "user"){
       url = `${process.env.WEB_URL}/admin-controller/password-reset?token=${resetToken}`;
     } else{
       url = `${process.env.WEB_URL}/password-reset?token=${resetToken}`;
     };
-    console.log({url});
     // await new Email(res, user, url).forgetPasswordUser();
     consoleMessage({ resetToken });
     goodResponse(res, 'Password reset Link sent to email');

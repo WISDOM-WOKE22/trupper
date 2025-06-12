@@ -17,7 +17,6 @@ exports.generateRefreshToken = (id) => {
 };
 
 exports.multiplePayLoadJwtToken = (payload) => {
-  console.log(payload);
   return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
   });

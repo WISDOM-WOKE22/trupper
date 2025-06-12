@@ -56,6 +56,28 @@ exports.getExamTypeByOrganization = async (req, res, next) => {
   }
 };
 
+exports.getExamTypeByOrganizationUser = async (req, res, next) => {
+  try {
+    const { organization } = req.params;
+    const checkOrganization = await Organization.findById(organization);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
+
+    const examTypes = await ExamType.find({
+      organization,
+      status: true
+    });
+
+    if (!examTypes) return badResponse(res, 'Exam type not found');
+
+    goodResponseDoc(res, 'Data retrieved', 200, examTypes);
+  } catch (error) {
+    next(error);
+  }
+}
+
 exports.getAnExamType = async (req, res, next) => {
   try {
     const { id } = req.params;
