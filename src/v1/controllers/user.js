@@ -29,7 +29,10 @@ exports.getAllUsers = async (req, res, next) => {
 exports.getUsersByOrganization = async (req, res, next) => {
   try {
     const { organization } = req.params;
-    const users = await User.find({ organization });
+    const users = await User.find({ organization }).populate([
+      { path: 'category' },
+      { path: 'subCategory' },
+    ]);
     goodResponseDoc(res, 'Users found', 200, users);
   } catch (error) {
     next(error);
@@ -62,9 +65,9 @@ exports.blockAUser = async (req, res, next) => {
       { runValidators: false }
     );
 
-    if(!user) return badResponse(res, "User does not exist");
+    if (!user) return badResponse(res, 'User does not exist');
 
-    goodResponseDoc(res, "User blocked", 200, user);
+    goodResponseDoc(res, 'User blocked', 200, user);
   } catch (error) {
     next(error);
   }
@@ -80,9 +83,9 @@ exports.unBlockAUser = async (req, res, next) => {
       { runValidators: false }
     );
 
-    if(!user) return badResponse(res, "User does not exist");
+    if (!user) return badResponse(res, 'User does not exist');
 
-    goodResponseDoc(res, "User unblocked", 200, user);
+    goodResponseDoc(res, 'User unblocked', 200, user);
   } catch (error) {
     next(error);
   }

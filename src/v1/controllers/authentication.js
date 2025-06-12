@@ -289,17 +289,17 @@ exports.createSubAdmin = async (req, res, next) => {
       email,
       firstName,
       lastName,
-      role: 'sub_admin',
+      role: 'SUB_ADMIN',
       organization: checkOrganization.id,
-    });
+    })
 
     const token = await subAdmin.createVerificationToken();
     await subAdmin.save({ validateBeforeSave: false });
 
-    const url = `${checkOrganization.domain}/kyc-complete/sub-admin?qrt=${token}`;
+    const url = `${req.protocol}://${checkOrganization.domain}/kyc-complete/sub-admin?qrt=${token}`;
     console.log({ url });
 
-    await new Email(res, subAdmin, url).addAdmin();
+    await new Email(res, subAdmin, url, checkOrganization).addAdmin();
 
     goodResponse(res, 'Sub Admin Created Successfully');
   } catch (error) {

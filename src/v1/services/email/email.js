@@ -5,14 +5,18 @@ const pug = require('pug');
 const { consoleError, consoleMessage } = require('../../utils/console');
 
 module.exports = class Email {
-  constructor(res, user, url, code) {
+  constructor(res, user, url, code, organization) {
     this.res = res;
     this.to = user.email;
     this.firstName = user.firstName;
     this.url = url;
     this.from = `Trupper <${process.env.EMAIL}>`;
     this.code = code;
-    this.organization = user.organization ? user.organization.name : 'Trupper';
+    this.organization =  organization
+        ? organization.name
+      : user.organization
+        ? user.organization.name
+        : 'Trupper';
   }
 
   newTransport() {
@@ -108,11 +112,17 @@ module.exports = class Email {
   }
 
   async newOrganization() {
-    await this.send('organization', `Welcome to ${this.organization} by Amidarh`);
+    await this.send(
+      'organization',
+      `Welcome to ${this.organization} by Amidarh`
+    );
   }
 
   async organization() {
-    await this.send('newOrganization', `Welcome to ${this.organization} by Amidarh`);
+    await this.send(
+      'newOrganization',
+      `Welcome to ${this.organization} by Amidarh`
+    );
   }
 
   async welcome() {

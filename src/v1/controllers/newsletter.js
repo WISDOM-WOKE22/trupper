@@ -33,7 +33,7 @@ exports.createNewsletterAndSaveAsDraft = async (req, res, next) => {
       userType,
       status,
       subject: title,
-      sentBy: user.id,
+      sentBy: user._id,
       organization: organization,
       subCategory,
       category: userCategory,
@@ -54,7 +54,7 @@ exports.sendNewsLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide newsletter queryId');
-    console.log(id)
+    console.log(id);
     const newsletter = await NewsLetter.findById(id).populate({
       path: 'organization',
     });
@@ -62,7 +62,18 @@ exports.sendNewsLetter = async (req, res, next) => {
     const user = req.user;
 
     if (!newsletter) return badResponse(res, 'Newsletter does not exit');
-    const users = await User.find({ organization: newsletter.organization.id });
+
+    let users;
+
+    if (newsletter.userType === 'users') {
+      users = await User.find({
+        organization: newsletter.organization.id,
+        subCategory: newsletter.subCategory,
+        category: newsletter.category,
+      });
+    } else {
+      users = await Admin.find({ organization: newsletter.organization.id });
+    }
 
     await new BulkMail(
       users,
@@ -120,7 +131,17 @@ exports.createNewsletterAndSend = async (req, res, next) => {
       category: userCategory,
     });
 
-    const users = await User.find({ organization: organization });
+    let users;
+
+    if (userType === 'users') {
+      users = await User.find({
+        organization: organization,
+        subCategory,
+        category,
+      });
+    } else {
+      users = await Admin.find({ organization: organization });
+    }
 
     const subject = title;
 
@@ -158,7 +179,7 @@ exports.updateNewsletter = async (req, res, next) => {
     if (!content) return badResponse(res, 'Provide email content');
     if (!userType) return badResponse(res, 'Select user type');
 
-    console.log({subCategory})
+    console.log({ subCategory });
 
     const newsletter = await NewsLetter.findByIdAndUpdate(
       id,
@@ -168,8 +189,8 @@ exports.updateNewsletter = async (req, res, next) => {
         userType,
         status,
         subject: title,
-        subCategory: subCategory === "" ? undefined : subCategory,
-        category: userCategory === "" ? undefined : userCategory,
+        subCategory: subCategory === '' ? undefined : subCategory,
+        category: userCategory === '' ? undefined : userCategory,
       },
       { runValidators: false }
     );

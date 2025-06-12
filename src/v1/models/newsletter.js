@@ -41,7 +41,7 @@ const newsLetterSchema = new Schema(
     },
     sentBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Admin',
     }
   },
   {
