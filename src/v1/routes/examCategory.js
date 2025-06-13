@@ -7,10 +7,12 @@ const {
   updateExamCategory,
   getCategoryByExamUser,
 } = require('../controllers/examCategory');
+const Admin = require('../models/admins')
+const { protect } = require('../middlewares/protectRoute')
 
 const Router = express.Router();
 
-Router.route('/').post(createExamCategory);
+Router.route('/').post(protect(Admin),createExamCategory);
 
 Router.route('/exam/:id').get(getCategoryByExam);
 

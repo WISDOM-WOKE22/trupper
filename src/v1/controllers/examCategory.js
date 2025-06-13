@@ -24,12 +24,13 @@ exports.createExamCategory = async (req, res, next) => {
     if (!subjects.length === 0)
       return badResponse(res, 'Please select an subjects');
 
-    const examCheck = await Exam.findOne({ queryId: exam });
+    const examCheck = await Exam.findById(exam);
 
     if (!examCheck) return badResponse(res, 'Exam does not exist');
 
     if (subjects.length > 0) {
       subjects.map((el) => {
+        console.log(el)
         subjectArray.push({
           name: el.value,
           subject: el.id,
