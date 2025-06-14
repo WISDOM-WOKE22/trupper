@@ -1,7 +1,6 @@
 const Exam = require('../models/exam');
 const CategorySubject = require('../models/categorySubject');
 const { consoleError } = require('../utils/console');
-const { getMany } = require('../utils/factoryFunction');
 const ExamCategory = require("../models/examCategory");
 const Organization = require("../models/organization");
 const {
@@ -46,7 +45,7 @@ exports.createExamCategory = async (req, res, next) => {
       createdSubjectsIdArray.push(el.id);
     });
 
-    const examCategory = await ExamCategory.create({
+    await ExamCategory.create({
       name,
       exam: examCheck._id,
       examType: examCheck.examType,
@@ -55,11 +54,13 @@ exports.createExamCategory = async (req, res, next) => {
       organization
     });
 
+    const examCategories = await ExamCategory.find({ exam: examCheck._id })
+
     goodResponseDoc(
       res,
       'Exam category created successfully',
       201,
-      examCategory
+      examCategories
     );
   } catch (error) {
     consoleError(error);
@@ -73,10 +74,10 @@ exports.createExamCategory = async (req, res, next) => {
 exports.getAnExamCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) return badResponse(res, 'Provide Exam category query Id');
+    if (!id) return badResponse(res, 'Provide Exam category Id');
 
-    const examCategory = await ExamCategory.findOne({ id }).populate([
-      { path: 'subjects' },
+    const examCategory = await ExamCategory.findById(id).populate([
+      // { path: 'subjects' },
       { path: 'examType' },
       { path: 'exam' },
     ]);
@@ -93,7 +94,7 @@ exports.getAnExamCategory = async (req, res, next) => {
 exports.getCategoryByExam = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) return badResponse(res, 'Provide Exam query Id');
+    if (!id) return badResponse(res, 'Provide Exam Id');
 
     const examCategory = await ExamCategory.find({ exam: id }).populate(
       'subjects'
@@ -108,7 +109,7 @@ exports.getCategoryByExam = async (req, res, next) => {
 exports.getCategoryByExamUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) return badResponse(res, 'Provide Exam query Id');
+    if (!id) return badResponse(res, 'Provide Exam Id');
 
     const examCategory = await ExamCategory.find({
       exam: id,
@@ -127,7 +128,7 @@ exports.getCategoryByExamUser = async (req, res, next) => {
 exports.removeCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const category = await ExamCategory.findOne({ queryId: id });
+    const category = await ExamCategory.findById(id);
 
     if (!category) return badResponse(res, 'Exam category does not exit');
     const categorySubjects = await category.subjects;
@@ -151,13 +152,14 @@ exports.removeCategory = async (req, res, next) => {
 exports.updateExamCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, name } = req.body;
+    const { status, name, subjects } = req.body;
 
     const examCategory = await ExamCategory.findByIdAndUpdate(
       id,
       {
         status,
         name,
+        subjects
       },
       { new: true }
     );
