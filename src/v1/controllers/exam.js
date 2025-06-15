@@ -198,7 +198,9 @@ exports.getExamsByOrganization = async (req, res, next) => {
     if (!organizationCheck)
       return badResponse(res, 'Organization does not exist');
 
-    const exams = await Exam.find({ organization });
+    const exams = await Exam.find({ organization }).populate({
+      path: 'examType',
+    });
     goodResponseDoc(res, 'Exams retrieved successfully', 200, exams);
   } catch (error) {
     next(error);

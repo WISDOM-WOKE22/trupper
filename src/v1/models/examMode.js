@@ -28,6 +28,10 @@ const examModeSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'UserCategoryTwo',
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Admin',
+    },
     queryId: String,
   },
   {

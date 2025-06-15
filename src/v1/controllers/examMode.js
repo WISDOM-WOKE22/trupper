@@ -1,6 +1,5 @@
 const Exam = require('../models/exam');
 const Organization = require('../models/organization');
-const Category = require('../models/userCategory');
 const SubCategory = require('../models/userCategoryTwo');
 const ExamMode = require('../models/examMode');
 const {
@@ -16,20 +15,25 @@ exports.createExamMode = async (req, res, next) => {
     if (!name) return badResponse(res, 'Provide Exam mode name');
     if (!exam) return badResponse(res, 'Provide exam id');
     if (!organization) return badResponse(res, 'Provide organization ID');
-    if (!category) return badResponse(res, 'Provide user category');
     if (!subCategory) return badResponse(res, 'Provide user sub category');
+    const user = req.user;
 
     const organizationCheck = await Organization.findById(organization);
     if (!organizationCheck)
       return badResponse(res, 'Organization does not exist');
 
+    const subCategoryCheck = await SubCategory.findById(subCategory);
+    if (!subCategoryCheck)
+      return badResponse(res, 'This sub category does not exist');
+
     const examMode = await ExamMode.create({
       name: name,
       exam,
       subCategory,
-      category,
+      category: subCategoryCheck.userCategory,
       status,
       organization,
+      createdBy: user._id,
     });
 
     if (!examMode) return badResponse(res, 'Could not create Exam mode');
@@ -61,9 +65,9 @@ exports.getExamModesBySubCategory = async (req, res, next) => {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide subcategory is');
 
-    const examModes = await ExamMode({
+    const examModes = await ExamMode.find({
       subCategory: id,
-    });
+    }).populate([{ path: 'createdBy' }, { path: 'exam' }]);
 
     goodResponseDoc(res, 'Exam modes retrieved successfully', 200, examModes);
   } catch (error) {
