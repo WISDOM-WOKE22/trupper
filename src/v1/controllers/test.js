@@ -2,9 +2,9 @@ const cloudinary = require('cloudinary').v2;
 const axios = require('axios'); // Add axios to check URL accessibility
 
 cloudinary.config({
-  cloud_name: 'ddai6csgj',
-  api_key: '931857992231393',
-  api_secret: 'EWRrrk4ydoY4ZDfpGhBqG8SdGCY',
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
 });
 
 async function checkUrlAccessibility(url) {
