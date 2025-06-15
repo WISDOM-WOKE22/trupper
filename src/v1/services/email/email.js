@@ -12,8 +12,8 @@ module.exports = class Email {
     this.url = url;
     this.from = `Trupper <${process.env.EMAIL}>`;
     this.code = code;
-    this.organization =  organization
-        ? organization.name
+    this.organization = organization
+      ? organization.name
       : user.organization
         ? user.organization.name
         : 'Trupper';

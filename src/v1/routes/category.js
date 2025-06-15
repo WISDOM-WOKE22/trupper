@@ -15,7 +15,7 @@ const {
   getUserCategoryTwoByOrganization,
   deleteCategory,
   getAUserCategoryTwo,
-  updateUserCategoryTwo
+  updateUserCategoryTwo,
 } = require('../controllers/userCategory');
 const { protect } = require('../middlewares/protectRoute');
 

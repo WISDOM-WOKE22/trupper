@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
 const newsLetterSchema = new Schema(
   {
@@ -42,7 +42,7 @@ const newsLetterSchema = new Schema(
     sentBy: {
       type: Schema.Types.ObjectId,
       ref: 'Admin',
-    }
+    },
   },
   {
     timestamps: true,

@@ -129,7 +129,7 @@ exports.getAUserCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide category Id');
-    const category = await UserCategory.findById(id)
+    const category = await UserCategory.findById(id);
     if (!category) return badResponse(res, 'Category does not exist');
 
     goodResponseDoc(res, 'category found', 200, category);
@@ -141,7 +141,9 @@ exports.getAUserCategoryTwo = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide category Id');
-    const category = await UserCategoryTwo.findById(id).populate({ path: "userCategory" });
+    const category = await UserCategoryTwo.findById(id).populate({
+      path: 'userCategory',
+    });
     if (!category) return badResponse(res, 'Category does not exist');
 
     goodResponseDoc(res, 'category found', 200, category);
@@ -225,7 +227,7 @@ exports.updateUserCategoryTwo = async (req, res, next) => {
         name,
         status,
         description,
-        userCategory
+        userCategory,
       },
       {
         new: true,
@@ -359,17 +361,17 @@ exports.deleteUserCategory = (Model) => async (req, res, next) => {
 };
 
 exports.deleteCategory = async (req, res, next) => {
-  try{
+  try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide category Id');
-    console.log({id})
+    console.log({ id });
     await UserCategoryTwo.deleteMany({ userCategory: id });
     const userCategory = await UserCategory.findByIdAndDelete(id);
 
     if (!userCategory) return badResponse(res, 'This category does not exist');
 
     goodResponse(res, 'Category deleted successfully');
-  } catch(error){
+  } catch (error) {
     next(error);
   }
-}
+};

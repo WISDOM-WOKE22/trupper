@@ -8,12 +8,12 @@ const questionSchema = new mongoose.Schema(
       required: true,
     },
     options: {
-        a: String,
-        b: String,
-        c: String,
-        d: String,
-        e: String,
-      },
+      a: String,
+      b: String,
+      c: String,
+      d: String,
+      e: String,
+    },
     subject: {
       type: Schema.Types.ObjectId,
       ref: 'Subject',
@@ -40,7 +40,7 @@ const questionSchema = new mongoose.Schema(
     category: String,
     organization: {
       type: Schema.Types.ObjectId,
-      ref: "Organization"
+      ref: 'Organization',
     },
     reason: String,
     questionCategory: {
@@ -51,7 +51,7 @@ const questionSchema = new mongoose.Schema(
     questionType: {
       type: String,
       enum: ['objective', 'theory', 'sub-objective'],
-      default: 'objective'
+      default: 'objective',
     },
     queryId: String,
     status: Boolean,

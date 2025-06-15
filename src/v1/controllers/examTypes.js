@@ -67,7 +67,7 @@ exports.getExamTypeByOrganizationUser = async (req, res, next) => {
 
     const examTypes = await ExamType.find({
       organization,
-      status: true
+      status: true,
     });
 
     if (!examTypes) return badResponse(res, 'Exam type not found');
@@ -76,7 +76,7 @@ exports.getExamTypeByOrganizationUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
 
 exports.getAnExamType = async (req, res, next) => {
   try {
@@ -150,8 +150,8 @@ exports.updateExamType = async (req, res, next) => {
       runValidators: false,
     });
 
-    if(!examType) return badResponse(res, "Exam Type does not exist");
-    goodResponseDoc(res, "Exam updated Successfully", 200, examType )
+    if (!examType) return badResponse(res, 'Exam Type does not exist');
+    goodResponseDoc(res, 'Exam updated Successfully', 200, examType);
   } catch (error) {
     next(error);
   }

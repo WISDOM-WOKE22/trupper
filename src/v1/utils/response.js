@@ -1,7 +1,7 @@
 exports.goodResponse = (res, message) => {
   return res.status(200).json({
     status: 200,
-    statusType:"Success",
+    statusType: 'Success',
     message,
   });
 };
@@ -9,7 +9,7 @@ exports.goodResponse = (res, message) => {
 exports.goodResponseDoc = (res, message, statusCode, doc) => {
   return res.status(statusCode).json({
     status: statusCode,
-    statusType:"Success",
+    statusType: 'Success',
     message,
     doc,
   });
@@ -17,14 +17,14 @@ exports.goodResponseDoc = (res, message, statusCode, doc) => {
 
 exports.goodResponseCustom = (res, statusCode, message) => {
   return res.status(statusCode).json({
-    status: "Success",
+    status: 'Success',
     message,
   });
 };
 
 exports.goodResponseResult = (res, doc) => {
   return res.status(200).json({
-    status: "Success",
+    status: 'Success',
     result: doc.length,
     doc,
   });
@@ -33,7 +33,7 @@ exports.goodResponseResult = (res, doc) => {
 exports.badResponse = (res, message) => {
   return res.status(400).json({
     status: 400,
-    statusType: "Failed",
+    statusType: 'Failed',
     message,
   });
 };
@@ -41,7 +41,7 @@ exports.badResponse = (res, message) => {
 exports.errorResponse = (res, message, statusCode) => {
   return res.status(statusCode).json({
     status: 400,
-    statusType: "Error",
+    statusType: 'Error',
     message,
   });
 };
@@ -49,7 +49,7 @@ exports.errorResponse = (res, message, statusCode) => {
 exports.badResponseCustom = (res, statusCode, error, message) => {
   return res.json(statusCode).json({
     status: statusCode,
-    statusType: "Failed",
+    statusType: 'Failed',
     message,
     error,
   });

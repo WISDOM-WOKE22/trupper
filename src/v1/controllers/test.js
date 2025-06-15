@@ -18,7 +18,8 @@ async function checkUrlAccessibility(url) {
 }
 
 async function uploadFromUrl() {
-  const imageUrl = 'https://res.cloudinary.com/ddai6csgj/image/upload/v1748180667/samples/coffee.jpg';
+  const imageUrl =
+    'https://res.cloudinary.com/ddai6csgj/image/upload/v1748180667/samples/coffee.jpg';
 
   // Check if the URL is accessible
   const isAccessible = await checkUrlAccessibility(imageUrl);
@@ -28,7 +29,7 @@ async function uploadFromUrl() {
   }
 
   try {
-    const result = await cloudinary.uploader.upload("./test.jpg", {
+    const result = await cloudinary.uploader.upload('./test.jpg', {
       folder: 'Uploads',
       timeout: 60000, // Set a 60-second timeout
     });
@@ -38,7 +39,9 @@ async function uploadFromUrl() {
   } catch (error) {
     console.error('Upload failed:', error);
     if (error.http_code === 499) {
-      console.error('Timeout occurred. Try increasing the timeout or check network stability.');
+      console.error(
+        'Timeout occurred. Try increasing the timeout or check network stability.'
+      );
     }
   }
 }

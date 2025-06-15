@@ -77,14 +77,14 @@ exports.createUser = async (req, res, next) => {
       return badResponse(res, 'Organization not found');
     }
 
-    if(!checkOrganization.enableSignup){
-      return badResponse(res, "Signup has been disabled for this organization")
+    if (!checkOrganization.enableSignup) {
+      return badResponse(res, 'Signup has been disabled for this organization');
     }
 
-    if(checkOrganization.codeSignUp){
+    if (checkOrganization.codeSignUp) {
       if (!code) return badResponse(res, 'Code is required');
-      codeCheck = await Code.findOne({code});
-  
+      codeCheck = await Code.findOne({ code });
+
       if (!codeCheck) {
         return badResponse(res, 'Invalid code please check code');
       }
@@ -98,7 +98,6 @@ exports.createUser = async (req, res, next) => {
     if (emailCheck) {
       return badResponse(res, 'Email already used');
     }
-
 
     let user;
 
@@ -289,7 +288,7 @@ exports.createSubAdmin = async (req, res, next) => {
       lastName,
       role: 'SUB_ADMIN',
       organization: checkOrganization.id,
-    })
+    });
 
     const token = await subAdmin.createVerificationToken();
     await subAdmin.save({ validateBeforeSave: false });
@@ -309,14 +308,8 @@ exports.createSubAdmin = async (req, res, next) => {
 
 exports.createMainUserAccount = async (req, res, next) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      password,
-      confirmPassword,
-    } = req.body;
+    const { firstName, lastName, email, phone, password, confirmPassword } =
+      req.body;
     if (!firstName) return badResponse(res, 'First Name is missing');
     if (!lastName) return badResponse(res, 'Last Name is Required');
     if (!email) return badResponse(res, 'Enter contact information');
@@ -343,7 +336,7 @@ exports.createMainUserAccount = async (req, res, next) => {
 
     const verificationCode = generateCode();
     admin.verificationCode = verificationCode;
-    admin.isVerified = true
+    admin.isVerified = true;
     await admin.save({ validateBeforeSave: false });
     // await new Email(res, admin, '', verificationCode).verifyEmail();
 
@@ -356,7 +349,12 @@ exports.createMainUserAccount = async (req, res, next) => {
     const token = await jwtToken(admin._id);
     const refreshToken = await generateRefreshToken(admin._id);
 
-    goodResponseDoc(res, 'Account created successfully', 201, { token, user:admin, refreshToken, loginToken  });
+    goodResponseDoc(res, 'Account created successfully', 201, {
+      token,
+      user: admin,
+      refreshToken,
+      loginToken,
+    });
   } catch (error) {
     next(error);
   }
@@ -418,7 +416,7 @@ exports.loginMainUser = async (req, res, next) => {
     if (!password) return badResponse(res, 'Provide Password');
     if (password.length <= 7)
       return badResponse(res, 'Password should be up to 8 characters');
-    
+
     const clientIp = requestIp.getClientIp(req);
     const device = await parser(req.headers['user-agent']);
 
@@ -903,11 +901,11 @@ exports.forgetPassword = (Model) => async (req, res) => {
 
     await user.save({ validateBeforeSave: false });
     let url;
-    if(user.role !== "User" || user.role !== "user"){
+    if (user.role !== 'User' || user.role !== 'user') {
       url = `${process.env.WEB_URL}/admin-controller/password-reset?token=${resetToken}`;
-    } else{
+    } else {
       url = `${process.env.WEB_URL}/password-reset?token=${resetToken}`;
-    };
+    }
     // await new Email(res, user, url).forgetPasswordUser();
     consoleMessage({ resetToken });
     goodResponse(res, 'Password reset Link sent to email');

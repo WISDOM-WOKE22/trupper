@@ -2,6 +2,7 @@ const Exam = require('../models/exam');
 const Organization = require('../models/organization');
 const Category = require('../models/userCategory');
 const SubCategory = require('../models/userCategoryTwo');
+const ExamMode = require('../models/examMode');
 const {
   badResponse,
   goodResponseDoc,
@@ -10,7 +11,91 @@ const {
 
 exports.createExamMode = async (req, res, next) => {
   try {
-    
+    const { name, exam, organization, category, subCategory, status } =
+      req.body;
+    if (!name) return badResponse(res, 'Provide Exam mode name');
+    if (!exam) return badResponse(res, 'Provide exam id');
+    if (!organization) return badResponse(res, 'Provide organization ID');
+    if (!category) return badResponse(res, 'Provide user category');
+    if (!subCategory) return badResponse(res, 'Provide user sub category');
+
+    const organizationCheck = await Organization.findById(organization);
+    if (!organizationCheck)
+      return badResponse(res, 'Organization does not exist');
+
+    const examMode = await ExamMode.create({
+      name: name,
+      exam,
+      subCategory,
+      category,
+      status,
+      organization,
+    });
+
+    if (!examMode) return badResponse(res, 'Could not create Exam mode');
+
+    goodResponseDoc(res, 'Exam Mode created successfully', 201, examMode);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateExamMode = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide exam mode id');
+    const examMode = await ExamMode.findByIdAndUpdate(id, req.body, {
+      runValidators: false,
+    });
+
+    if (!examMode) return badResponse(res, 'Exam Modes does not exist');
+
+    goodResponseDoc(res, 'Exam mode updated successfully', 200, examMode);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getExamModesBySubCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide subcategory is');
+
+    const examModes = await ExamMode({
+      subCategory: id,
+    });
+
+    goodResponseDoc(res, 'Exam modes retrieved successfully', 200, examModes);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getExamModesBySubCategoryUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide subcategory');
+
+    const examModes = await ExamMode({
+      subCategory: id,
+      status: true,
+    });
+
+    goodResponseDoc(res, 'Exam modes retrieved successfully', 200, examModes);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteAnExamMode = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide exam mode id');
+    const examMode = await ExamMode.findByIdAndDelete(id);
+
+    if (!examMode) return badResponse(res, 'Exam Modes does not exist');
+
+    goodResponse(res, 'Exam mode deleted successfully');
   } catch (error) {
     next(error);
   }

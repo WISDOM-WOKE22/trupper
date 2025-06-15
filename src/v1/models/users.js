@@ -52,12 +52,12 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ['USER'],
-      default: "USER"
+      default: 'USER',
     },
     status: {
       type: String,
-      enum: [ 'active', 'inactive' ],
-      default: 'active'
+      enum: ['active', 'inactive'],
+      default: 'active',
     },
     twoFactor: {
       type: Boolean,
@@ -89,7 +89,7 @@ const userSchema = new mongoose.Schema(
     },
     subCategory: {
       type: Schema.Types.ObjectId,
-      ref: "UserCategoryTwo"
+      ref: 'UserCategoryTwo',
     },
     verificationCode: Number,
     lastLogin: Date,
@@ -103,7 +103,7 @@ const userSchema = new mongoose.Schema(
     },
     theme: {
       type: String,
-      enum: ['light', 'dark', "system"],
+      enum: ['light', 'dark', 'system'],
       default: 'light',
     },
     signUpMode: {
@@ -154,7 +154,7 @@ userSchema.methods.createVerificationToken = async function () {
     .update(token)
     .digest('hex');
 
-    return token;
+  return token;
 };
 
 userSchema.methods.createResetToken = async function () {

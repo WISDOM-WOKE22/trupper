@@ -85,7 +85,7 @@ const adminSchema = new mongoose.Schema(
     },
     theme: {
       type: String,
-      enum: ['light', 'dark', "system"],
+      enum: ['light', 'dark', 'system'],
       default: 'light',
     },
     signUpMode: {
@@ -141,7 +141,7 @@ adminSchema.methods.createVerificationToken = async function () {
     .update(token)
     .digest('hex');
 
-    return token;
+  return token;
 };
 
 adminSchema.methods.createResetToken = async function () {

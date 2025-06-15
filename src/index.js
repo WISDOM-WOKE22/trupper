@@ -46,12 +46,13 @@ const categoryRoute = require('./v1/routes/category');
 const analyticsRoute = require('./v1/routes/analytics');
 const adminRoute = require('./v1/routes/admin');
 const codeRoute = require('./v1/routes/code');
-const examTypeRoute = require('./v1/routes/examType')
-const examRoute = require('./v1/routes/exam')
+const examTypeRoute = require('./v1/routes/examType');
+const examRoute = require('./v1/routes/exam');
 const subjectRoute = require('./v1/routes/subject');
 const questionRoute = require('./v1/routes/question');
 const newsletterRoute = require('./v1/routes/newsletter');
 const examCategoryRoute = require('./v1/routes/examCategory');
+const examModeRoute = require('./v1/routes/examMode');
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/organization', organizationRoute);
@@ -61,11 +62,12 @@ app.use('/api/v1/analytics', analyticsRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/code', codeRoute);
 app.use('/api/v1/exam-type', examTypeRoute);
-app.use('/api/v1/exams', examRoute)
+app.use('/api/v1/exams', examRoute);
 app.use('/api/v1/subjects', subjectRoute);
 app.use('/api/v1/questions', questionRoute);
 app.use('/api/v1/newsletter', newsletterRoute);
 app.use('/api/v1/exam-category', examCategoryRoute);
+app.use('/api/v1/exam-mode', examModeRoute);
 
 // Catch-all route for undefined routes
 app.use('/api/v1/test', (req, res) => {

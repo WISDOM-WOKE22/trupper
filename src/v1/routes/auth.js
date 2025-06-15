@@ -1,7 +1,7 @@
 const express = require('express');
 const User = require('../models/users');
 const Admin = require('../models/admins');
-const { protect } = require('../middlewares/protectRoute')
+const { protect } = require('../middlewares/protectRoute');
 const {
   login,
   resetPassword,
@@ -22,7 +22,7 @@ const {
   loginMainUser,
   continueUserAccountCreationByLink,
   generateAndSendUserAuthLink,
-  token
+  token,
 } = require('../controllers/authentication');
 
 const Router = express.Router();
@@ -70,7 +70,7 @@ Router.route('/signup').post(createUser);
 // Reset Password
 Router.route('/reset-password/:token').post(resetPassword(User));
 
-// Admin Reset Password 
+// Admin Reset Password
 Router.route('/admin-reset-password/:token').post(resetPassword(Admin));
 
 // Update Password

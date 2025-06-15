@@ -21,7 +21,7 @@ const pricingSchema = new mongoose.Schema(
     },
     cbtAiTrials: {
       type: Number,
-      default: 0
+      default: 0,
     },
     cbtSummary: {
       type: Boolean,

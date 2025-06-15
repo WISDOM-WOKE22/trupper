@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const examCategorySchema = new mongoose.Schema(
   {
     name: {
-      type: String
+      type: String,
     },
     exam: {
       type: Schema.Types.ObjectId,
@@ -23,7 +23,7 @@ const examCategorySchema = new mongoose.Schema(
     ],
     organization: {
       type: Schema.Types.ObjectId,
-      ref: "Organization"
+      ref: 'Organization',
     },
     status: {
       type: Boolean,

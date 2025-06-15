@@ -17,7 +17,10 @@ exports.protect = (Model) => async (req, res, next) => {
       );
     }
 
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_ACCESS_SECRET);
+    const decoded = await promisify(jwt.verify)(
+      token,
+      process.env.JWT_ACCESS_SECRET
+    );
     const currentUser = await Model.findById(decoded.id);
     if (!currentUser)
       return badResponse(

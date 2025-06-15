@@ -101,10 +101,10 @@ const resultSchema = new mongoose.Schema(
         totalQuestions: {
           type: Number,
           min: 0,
-        },    
+        },
         organization: {
           type: Schema.Types.ObjectId,
-          ref: "Organization"
+          ref: 'Organization',
         },
         school: String,
         finished: {

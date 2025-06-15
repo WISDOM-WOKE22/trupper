@@ -10,7 +10,7 @@ exports.createOne = (Model) => async (req, res) => {
     const doc = await Model.create(req.body);
     goodResponseDoc(res, 'Document created successfully', doc);
   } catch (error) {
-    consoleError(error)
+    consoleError(error);
     badResponse(res, 'Could not create document');
   }
 };

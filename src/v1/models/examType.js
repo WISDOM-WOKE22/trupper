@@ -28,11 +28,11 @@ const examTypeSchema = new mongoose.Schema(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: "UserCategory"
+      ref: 'UserCategory',
     },
     subCategory: {
       type: Schema.Types.ObjectId,
-      ref: "UserCategoryTwo"
+      ref: 'UserCategoryTwo',
     },
     queryId: String,
   },

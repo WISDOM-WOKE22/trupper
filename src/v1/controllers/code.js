@@ -1,6 +1,10 @@
 const Organization = require('../models/organization');
 const Code = require('../models/code');
-const { badResponse, goodResponseDoc, goodResponse } = require('../utils/response');
+const {
+  badResponse,
+  goodResponseDoc,
+  goodResponse,
+} = require('../utils/response');
 const { generateCode, generateUniqueCodes } = require('../utils/generate');
 
 exports.generateSingleCode = async (req, res, next) => {

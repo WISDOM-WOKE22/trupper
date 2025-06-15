@@ -20,9 +20,9 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    user:{
+    user: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
     },
     status: {
       type: String,
@@ -31,7 +31,7 @@ const notificationSchema = new mongoose.Schema(
     },
     organization: {
       type: Schema.Types.ObjectId,
-      ref: "Organization"
+      ref: 'Organization',
     },
     queryId: String,
   },

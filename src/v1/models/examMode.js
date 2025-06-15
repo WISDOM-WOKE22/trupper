@@ -9,9 +9,9 @@ const examModeSchema = new mongoose.Schema(
       unique: true,
     },
     exam: {
-        type: Schema.Types.ObjectId,
-        ref: 'Exam',
-      },
+      type: Schema.Types.ObjectId,
+      ref: 'Exam',
+    },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
@@ -22,11 +22,11 @@ const examModeSchema = new mongoose.Schema(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: "UserCategory"
+      ref: 'UserCategory',
     },
     subCategory: {
       type: Schema.Types.ObjectId,
-      ref: "UserCategoryTwo"
+      ref: 'UserCategoryTwo',
     },
     queryId: String,
   },

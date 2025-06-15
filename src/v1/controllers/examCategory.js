@@ -1,8 +1,8 @@
 const Exam = require('../models/exam');
 const CategorySubject = require('../models/categorySubject');
 const { consoleError } = require('../utils/console');
-const ExamCategory = require("../models/examCategory");
-const Organization = require("../models/organization");
+const ExamCategory = require('../models/examCategory');
+const Organization = require('../models/organization');
 const {
   badResponse,
   goodResponseDoc,
@@ -16,7 +16,8 @@ exports.createExamCategory = async (req, res, next) => {
     let createdSubjectsIdArray = [];
 
     const organizationCheck = await Organization.findById(organization);
-        if (!organizationCheck) return badResponse(res, 'Organization does not exist');
+    if (!organizationCheck)
+      return badResponse(res, 'Organization does not exist');
 
     if (!name) return badResponse(res, 'Provide exam category Name');
     if (!exam) return badResponse(res, 'Please select an exam');
@@ -29,12 +30,12 @@ exports.createExamCategory = async (req, res, next) => {
 
     if (subjects.length > 0) {
       subjects.map((el) => {
-        console.log(el)
+        console.log(el);
         subjectArray.push({
           name: el.value,
           subject: el.id,
           exam: examCheck._id,
-          organization
+          organization,
         });
       });
     }
@@ -51,10 +52,10 @@ exports.createExamCategory = async (req, res, next) => {
       examType: examCheck.examType,
       subjects: createdSubjectsIdArray,
       status,
-      organization
+      organization,
     });
 
-    const examCategories = await ExamCategory.find({ exam: examCheck._id })
+    const examCategories = await ExamCategory.find({ exam: examCheck._id });
 
     goodResponseDoc(
       res,
@@ -115,7 +116,7 @@ exports.getCategoryByExamUser = async (req, res, next) => {
       exam: id,
       status: true,
     }).populate({
-      path:'subjects',
+      path: 'subjects',
       match: { active: true },
     });
     goodResponseDoc(res, 'Exam Category', 200, examCategory);
@@ -159,7 +160,7 @@ exports.updateExamCategory = async (req, res, next) => {
       {
         status,
         name,
-        subjects
+        subjects,
       },
       { new: true }
     );

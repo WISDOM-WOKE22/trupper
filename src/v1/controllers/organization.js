@@ -1,6 +1,6 @@
 const Organization = require('../models/organization');
 const { uploadImage } = require('../utils/image');
-const Email = require("../services/email/email")
+const Email = require('../services/email/email');
 
 const {
   badResponse,
@@ -30,12 +30,15 @@ exports.createOrganization = async (req, res, next) => {
     }
 
     // const url = `${req.protocol}://${organization.name}.${process.env.HOST}/onboarding/personnel`
-    const url = `${req.protocol}://localhost:3000/onboarding/personnel`
+    const url = `${req.protocol}://localhost:3000/onboarding/personnel`;
 
-    organization.domain = process.env.NODE_ENV === "production" ? `${organization.name.toLocaleLowerCase}.${process.env.HOST}` : "localhost:3000";
+    organization.domain =
+      process.env.NODE_ENV === 'production'
+        ? `${organization.name.toLocaleLowerCase}.${process.env.HOST}`
+        : 'localhost:3000';
     await organization.save({ validateBeforeSave: false });
 
-    await new Email(res, organization, url).welcomeOrganization()
+    await new Email(res, organization, url).welcomeOrganization();
 
     return goodResponseDoc(
       res,
@@ -192,14 +195,9 @@ exports.updateOrganization = async (req, res, next) => {
       { runValidators: false, new: false }
     );
 
-    const data = await Organization.findById(organization.id); 
+    const data = await Organization.findById(organization.id);
 
-    goodResponseDoc(
-      res,
-      'Organization Updated successfully',
-      200,
-      data
-    );
+    goodResponseDoc(res, 'Organization Updated successfully', 200, data);
   } catch (error) {
     next(error);
   }

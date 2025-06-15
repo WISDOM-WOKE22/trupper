@@ -3,14 +3,14 @@ const pug = require('pug');
 const { consoleError, consoleMessage } = require('../../utils/console');
 
 module.exports = class BulkMail {
-  constructor(users, subject, content, organization, sentBy,res) {
+  constructor(users, subject, content, organization, sentBy, res) {
     this.users = users;
     this.subject = subject;
     this.from = `${organization.name} <${process.env.EMAIL}>`;
     this.content = content;
     this.res = res;
     this.organization = organization;
-    this.sentBy = sentBy
+    this.sentBy = sentBy;
   }
 
   newTransport() {

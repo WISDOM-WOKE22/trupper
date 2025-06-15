@@ -26,7 +26,7 @@ const CategorySubjectSchema = new mongoose.Schema(
     },
     organization: {
       type: Schema.Types.ObjectId,
-      ref: "Organization"
+      ref: 'Organization',
     },
     queryId: String,
   },

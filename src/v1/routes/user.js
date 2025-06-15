@@ -7,7 +7,7 @@ const {
   getUsersByOrganization,
   getAUser,
   unBlockAUser,
-  blockAUser
+  blockAUser,
 } = require('../controllers/user');
 const { protect } = require('../middlewares/protectRoute');
 const User = require('../models/users');
@@ -24,7 +24,9 @@ Router.route('/disable-2fa').post(protect(User), disable2Fa(User));
 
 Router.route('/get_users').post(getUsersName);
 
-Router.route('/get_users_by_organization/:organization').get(getUsersByOrganization);
+Router.route('/get_users_by_organization/:organization').get(
+  getUsersByOrganization
+);
 
 Router.route('/update-me').post(
   protect(User),
@@ -35,9 +37,8 @@ Router.route('/update-me').post(
 Router.route('/update-email').post(protect(User), updateEmail);
 
 Router.route('/block/:id').patch(blockAUser);
-Router.route('/unblocked/:id').patch(unBlockAUser)
+Router.route('/unblocked/:id').patch(unBlockAUser);
 
-Router.route("/:id").get(getAUser)
-
+Router.route('/:id').get(getAUser);
 
 module.exports = Router;

@@ -8,11 +8,11 @@ const organizationSettingSchema = new mongoose.Schema({
   },
   theme: {
     type: String,
-    enum: [ 'dark', 'light', "system" ]
+    enum: ['dark', 'light', 'system'],
   },
   defaultPassword: String,
   currentSection: {
     type: Schema.Types.ObjectId,
-    ref: "UserCategoryOne"
-  }
+    ref: 'UserCategoryOne',
+  },
 });

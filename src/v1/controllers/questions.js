@@ -137,16 +137,21 @@ exports.getQuestionsBySubject = async (req, res, next) => {
 };
 
 exports.deleteAQuestion = async (req, res, next) => {
-  try{
+  try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide subject ID');
 
     const questions = await Question.findByIdAndDelete(id);
-    return goodResponseDoc(res, 'Question Deleted Successfully', 200, questions);
+    return goodResponseDoc(
+      res,
+      'Question Deleted Successfully',
+      200,
+      questions
+    );
   } catch (error) {
     return next(error);
-}
-}
+  }
+};
 
 exports.updateQuestion = async (req, res, next) => {
   try {
@@ -201,7 +206,9 @@ exports.updateQuestion = async (req, res, next) => {
         exam,
       },
       { new: true, runValidators: true }
-    ).populate('subject').populate('exam');
+    )
+      .populate('subject')
+      .populate('exam');
 
     return goodResponseDoc(
       res,

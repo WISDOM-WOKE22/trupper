@@ -21,5 +21,3 @@ const upload = Multer({
 });
 
 module.exports = upload;
-
-
