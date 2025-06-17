@@ -74,7 +74,10 @@ Router.route('/reset-password/:token').post(resetPassword(User));
 Router.route('/admin-reset-password/:token').post(resetPassword(Admin));
 
 // Update Password
-Router.route('/update-password').post(updatePassword);
+Router.route('/update-password').post(protect(User), updatePassword);
+
+// Admin Update Password
+Router.route('/update-admin-password').post(protect(Admin), updatePassword);
 
 // Complete Admin Creation
 Router.route('/complete-admin-creation/:id').post(completeAdminCreation);

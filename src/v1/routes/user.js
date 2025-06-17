@@ -11,6 +11,7 @@ const {
 } = require('../controllers/user');
 const { protect } = require('../middlewares/protectRoute');
 const User = require('../models/users');
+const Admin = require('../models/admins');
 const { Enable2Fa, disable2Fa } = require('../services/2fa');
 const upload = require('../middlewares/multer');
 
@@ -30,8 +31,14 @@ Router.route('/get_users_by_organization/:organization').get(
 
 Router.route('/update-me').post(
   protect(User),
-  upload.single('file'),
+  upload.single('image'),
   updateMe(User)
+);
+
+Router.route('/update-admin-me').post(
+  protect(Admin),
+  upload.single('image'),
+  updateMe(Admin)
 );
 
 Router.route('/update-email').post(protect(User), updateEmail);

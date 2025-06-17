@@ -32,6 +32,8 @@ const examModeSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'Admin',
     },
+    validTill: Date,
+    validFrom: Date,
     queryId: String,
   },
   {

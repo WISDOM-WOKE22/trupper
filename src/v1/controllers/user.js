@@ -1,7 +1,6 @@
 const User = require('../models/users');
 const { badResponse, goodResponseDoc } = require('../utils/response');
-const cloudinary = require('../services/cloudinary');
-// const CbtUser = require('../models/cbtUser');
+const { uploadImage } = require('../utils/image');
 
 exports.getAUser = async (req, res, next) => {
   try {
@@ -102,22 +101,16 @@ exports.updateMe = (Model) => async (req, res, next) => {
       return badResponse(res, 'User does exist');
     }
 
-    let image = req.user.photo;
-    if (req.body.image) {
-      if (req.body.image) {
-        await cloudinary.uploader
-          .upload(req.file.path, { folder: 'uploads' })
-          .then((result) => {
-            image = result.secure_url;
-            // console.log(result.secure_url)
-          })
-          .catch((err) => console.log(err));
-      }
+    // Handle image upload
+    let image = '';
+    if (req.file) {
+      console.log(req.file);
+      image = await uploadImage(req, res);
     }
 
     const updateUser = await Model.findOneAndUpdate(
       { queryId: user.queryId },
-      { ...req.body, photo: image },
+      { ...req.body, photo: image ?? user.photo },
       {
         runValidators: false,
         validateBeforeSave: false,
@@ -127,7 +120,7 @@ exports.updateMe = (Model) => async (req, res, next) => {
 
     goodResponseDoc(res, 'Profile updated Successfully', 200, updatedUser);
   } catch (error) {
-    badResponse(res, 'Could not update user');
+    // badResponse(res, 'Could not update user');
     next(error);
   }
 };

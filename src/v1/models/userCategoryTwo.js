@@ -22,6 +22,11 @@ const userCategorySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isExamModeOn: Boolean,
+    examMode: {
+      type: Schema.Types.ObjectId,
+      ref: 'ExamMode',
+    },
     queryId: String,
   },
   {

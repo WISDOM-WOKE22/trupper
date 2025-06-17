@@ -16,7 +16,7 @@ exports.uploadImage = async (req, res) => {
       return result.secure_url;
     } catch (err) {
       console.log(err);
-      return badResponse(res, 'Failed to upload image to Cloudinary');
+      return new Error('Failed to upload image to Cloudinary');
     }
   } else {
     return badResponse(res, 'Image is required');

@@ -52,6 +52,18 @@ exports.updateExamMode = async (req, res, next) => {
       runValidators: false,
     });
 
+    console.log({ examMode });
+
+    await ExamMode.updateMany(
+      { subCategory: examMode.subCategory },
+      {
+        status: false,
+      }
+    );
+
+    examMode.status = req.body.status;
+    await examMode.save({ validateBeforeSave: false });
+
     if (!examMode) return badResponse(res, 'Exam Modes does not exist');
 
     goodResponseDoc(res, 'Exam mode updated successfully', 200, examMode);
