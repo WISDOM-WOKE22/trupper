@@ -207,6 +207,26 @@ exports.getExamsByOrganization = async (req, res, next) => {
   }
 };
 
+exports.getExamsByExamType = async (req, res, next) => {
+  try {
+    const { examType } = req.params;
+    console.log(examType);
+    // if (!organization) return badResponse(res, 'Provide organization ID');
+
+    // const organizationCheck = await Organization.findById(organization);
+    // if (!organizationCheck)
+    //   return badResponse(res, 'Organization does not exist');
+
+    const exams = await Exam.find({ examType }).populate({
+      path: 'examType',
+    });
+
+    goodResponseDoc(res, 'Exams retrieved successfully', 200, exams);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getExamsByOrganizationUser = async (req, res, next) => {
   try {
     const { organization } = req.params;

@@ -11,7 +11,7 @@ const examSchema = new mongoose.Schema(
     acronym: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     duration: {
       type: Number,

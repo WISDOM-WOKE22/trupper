@@ -6,7 +6,7 @@ const examModeSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     exam: {
       type: Schema.Types.ObjectId,

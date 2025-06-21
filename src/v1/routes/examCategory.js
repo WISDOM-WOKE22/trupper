@@ -14,7 +14,7 @@ const Router = express.Router();
 
 Router.route('/').post(protect(Admin), createExamCategory);
 
-Router.route('/exam/:id').get(protect(Admin), getCategoryByExam);
+Router.route('/exam/:id').get(getCategoryByExam);
 
 Router.route('/exam_user/:id').get(protect(Admin), getCategoryByExamUser);
 

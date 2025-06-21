@@ -7,10 +7,15 @@ const {
   getExamTypeByOrganization,
   getExamTypeBySubCategory,
   updateExamType,
+  getExamTypeByOrganizationUser,
 } = require('../controllers/examTypes');
 const Router = express.Router();
 
 Router.route('/organization/:organization').get(getExamTypeByOrganization);
+
+Router.route('/organization-user/:organization').get(
+  getExamTypeByOrganizationUser
+);
 
 Router.route('/category/:category').get(getExamTypeByCategory);
 
