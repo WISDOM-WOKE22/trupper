@@ -5,9 +5,8 @@ const CategorySubject = require('../models/categorySubject');
 const {
   badResponse,
   goodResponseDoc,
-  badResponseCustom,
+  goodResponse,
 } = require('../utils/response');
-const { getMany, getOne, deleteOne } = require('../utils/factoryFunction');
 
 // const currentDate = new Date();
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -60,20 +59,28 @@ exports.createExamCard = async (req, res, next) => {
 
 exports.getExamCardByUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
     const user = req.user;
-    if (!id) return badResponse(res, 'Provide User id');
     const examCards = await ExamCard.find({ user: user.id })
       .populate('subjects')
       .populate([{ path: 'category' }, { path: 'exam' }, { path: 'school' }])
       .sort({ createdAt: -1 });
-    goodResponseDoc(res, 'User Subscriptions', 200, { examCards });
+    goodResponseDoc(res, 'User Subscriptions', 200, examCards);
   } catch (error) {
     next(error);
   }
 };
 
-exports.deleteExamCard = deleteOne(ExamCard);
+exports.deleteExamCard = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide Exam Card ID');
+    const examCard = await ExamCard.findByIdAndDelete(id);
+    if (!examCard) return badResponse(res, 'Exam Card does not exist');
+    goodResponse(res, 'Exam Card deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getExamCardSubjects = async (req, res, next) => {
   try {
