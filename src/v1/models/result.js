@@ -24,7 +24,7 @@ const resultSchema = new mongoose.Schema(
     },
     subscription: {
       type: Schema.Types.ObjectId,
-      ref: 'Subscription',
+      ref: 'ExamCard',
     },
     passed: {
       type: Number,
@@ -61,6 +61,14 @@ const resultSchema = new mongoose.Schema(
     },
     duration: {
       type: String,
+    },
+    main: {
+      type: Boolean,
+      default: false,
+    },
+    examMode: {
+      type: Schema.Types.ObjectId,
+      ref: 'ExamMode',
     },
     general: [
       {

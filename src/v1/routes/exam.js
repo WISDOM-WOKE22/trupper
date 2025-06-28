@@ -7,6 +7,7 @@ const {
   deleteAnExam,
   getExamsByOrganizationUser,
   getExamsByExamType,
+  startAnExam,
 } = require('../controllers/exam');
 const { User } = require('../models/users');
 const Router = express.Router();
@@ -24,5 +25,10 @@ Router.route('/:id')
   .get(getAnExam)
   .patch(upload.single('image'), updateExam)
   .delete(deleteAnExam);
+
+Router.use(protect(User));
+
+Router.route('/start-exam/:id').post(startAnExam);
+Router.route('/end-exam/:id').post(startAnExam);
 
 module.exports = Router;

@@ -20,23 +20,14 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      require: true,
+      required: true,
     },
     confirmPassword: {
       type: String,
       // required: true,
     },
-    subscription: {
-      type: String,
-      enum: ['free', 'subscribed', 'un-subscribed'],
-      default: 'un-subscribed',
-    },
     subscriptionDuration: Number,
     subscriptionExpires: Date,
-    subscriptionId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Subscription',
-    },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
@@ -97,6 +88,17 @@ const userSchema = new mongoose.Schema(
     passwordResetTokenExpires: Date,
     passwordResetToken: String,
     verificationToken: String,
+    examOngoing: {
+      type: Boolean,
+      default: false,
+    },
+    examResultId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Result',
+    },
+    examState: {
+      type: Object,
+    },
     cbtTrials: {
       type: Number,
       default: 0,
