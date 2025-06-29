@@ -6,6 +6,7 @@ const {
 } = require('mongoose');
 const CategorySubject = require('../models/categorySubject');
 const Questions = require('../models/questions');
+const User = require('../models/users');
 const Result = require('../models/result');
 const {
   goodResponse,
@@ -276,12 +277,9 @@ exports.deleteAnExam = async (req, res, next) => {
 exports.startAnExam = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const {
-      examCardID,
-      examCardIdTwo,
-      duration: reqDuration,
-      examMode,
-    } = req.body;
+    console.log(id, req.body);
+    const { examCardID, examCardIdTwo, duration, examMode, organization } =
+      req.body;
     const user = req.user;
     let questions = [];
     let result;
@@ -297,7 +295,7 @@ exports.startAnExam = async (req, res, next) => {
         .populate('user');
 
       if (!examCard) return badResponse(res, 'Invalid ExamCard');
-      if (examCard.exam.subjectToBeWritten <= 1)
+      if (examCard.exam.subjectToBeWritten < 1)
         return badResponse(res, 'Invalid ExamCard configuration');
 
       if (!examCard.user._id.equals(user._id))
@@ -307,8 +305,6 @@ exports.startAnExam = async (req, res, next) => {
       const questionPromises = examSubjects.map(async (subject) => {
         const matchFilter = {
           subject: new ObjectId(subject.subject),
-          organization,
-          organization: user.organization,
         };
 
         const sampleSize = Math.floor(
@@ -335,7 +331,7 @@ exports.startAnExam = async (req, res, next) => {
       if (!questions.length)
         return badResponse(res, 'No questions available for this exam');
 
-      tm = reqDuration || examCard.exam.duration;
+      tm = duration || examCard.exam.duration;
 
       result = await Result.findOne({
         user: user._id,
@@ -357,11 +353,26 @@ exports.startAnExam = async (req, res, next) => {
         });
       }
 
+      user.examOngoing = true;
+      user.examResultId = result._id;
+      user.examState = {
+        questions,
+        duration: tm,
+        subject: examCard.exam.acronym,
+      };
+
+      user.examOngoing = true;
+      user.examResultId = result._id;
+      await user.save({ runValidators: false, validateBeforeSave: false });
+
+      const userData = await User.findById(user.id);
+
       return goodResponseDoc(res, 'Exam Started', 201, {
         questions,
         duration: tm,
         subject: examCard.exam.acronym,
         resultId: result._id,
+        user: userData,
       });
     }
 
@@ -400,7 +411,7 @@ exports.startAnExam = async (req, res, next) => {
     if (!questions.length)
       return badResponse(res, 'No questions available for this exam');
 
-    tm = reqDuration || examSubject.exam.duration;
+    tm = duration || examSubject.exam.duration;
 
     result = await Result.create({
       user: user._id,
@@ -414,12 +425,14 @@ exports.startAnExam = async (req, res, next) => {
     user.examOngoing = true;
     user.examResultId = result._id;
     await user.save({ runValidators: false, validateBeforeSave: false });
+    const userData = await User.findById(user.id);
 
     return goodResponseDoc(res, 'Exam Started', 201, {
       questions,
       duration: tm,
       subject: examSubject.name,
       resultId: result._id,
+      user: userData,
     });
   } catch (error) {
     next(error);

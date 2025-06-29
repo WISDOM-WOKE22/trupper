@@ -8,8 +8,9 @@ const {
   getExamsByOrganizationUser,
   getExamsByExamType,
   startAnExam,
+  endExam,
 } = require('../controllers/exam');
-const { User } = require('../models/users');
+const User = require('../models/users');
 const Router = express.Router();
 const upload = require('../middlewares/multer');
 const { protect } = require('../middlewares/protectRoute');
@@ -21,14 +22,13 @@ Router.route('/organization-user/:organization').get(
 );
 Router.route('/organization/:organization').get(getExamsByOrganization);
 Router.route('/exam-type/:examType').get(getExamsByExamType);
+// Start and end exam (protected)
+Router.route('/start-exam/:id').post(protect(User), startAnExam);
+
+Router.route('/end-exam/:id').post(protect(User), endExam);
 Router.route('/:id')
   .get(getAnExam)
   .patch(upload.single('image'), updateExam)
   .delete(deleteAnExam);
-
-Router.use(protect(User));
-
-Router.route('/start-exam/:id').post(startAnExam);
-Router.route('/end-exam/:id').post(startAnExam);
 
 module.exports = Router;
