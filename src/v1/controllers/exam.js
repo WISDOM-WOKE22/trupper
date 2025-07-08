@@ -18,7 +18,6 @@ const { uploadImage } = require('../utils/image');
 
 exports.createExam = async (req, res, next) => {
   try {
-    console.log(req.body);
     const {
       name,
       examType,
@@ -217,7 +216,6 @@ exports.getExamsByOrganization = async (req, res, next) => {
 exports.getExamsByExamType = async (req, res, next) => {
   try {
     const { examType } = req.params;
-    console.log(examType);
     // if (!organization) return badResponse(res, 'Provide organization ID');
 
     // const organizationCheck = await Organization.findById(organization);
@@ -277,7 +275,6 @@ exports.deleteAnExam = async (req, res, next) => {
 exports.startAnExam = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id, req.body);
     const { examCardID, examCardIdTwo, duration, examMode, organization } =
       req.body;
     const user = req.user;
@@ -333,13 +330,13 @@ exports.startAnExam = async (req, res, next) => {
 
       tm = duration || examCard.exam.duration;
 
-      result = await Result.findOne({
-        user: user._id,
-        subscription: examCard._id,
-      });
+      // result = await Result.findOne({
+      //   user: user._id,
+      //   subscription: examCard._id,
+      // });
 
-      if (result && result.finished)
-        return badResponse(res, "Oops, you can't re-write this exam");
+      // if (result && result.finished)
+      //   return badResponse(res, "Oops, you can't re-write this exam");
 
       if (!result) {
         result = await Result.create({
