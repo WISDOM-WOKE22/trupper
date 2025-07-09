@@ -108,7 +108,6 @@ exports.getExamCardSubjects = async (req, res, next) => {
         })
       );
     }
-    console.log(subjects);
     goodResponseDoc(res, 'Exam subjects gotten', 200, subjects);
   } catch (error) {
     next(error);

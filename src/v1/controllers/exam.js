@@ -277,6 +277,7 @@ exports.startAnExam = async (req, res, next) => {
     const { id } = req.params;
     const { examCardID, examCardIdTwo, duration, examMode, organization } =
       req.body;
+    console.log(req.body, id);
     const user = req.user;
     let questions = [];
     let result;
@@ -376,18 +377,18 @@ exports.startAnExam = async (req, res, next) => {
     // ***********************
     // Case 2: Using id and examCardIdTwo (non-subscription exam)
     // ***********************
-    if (!id) return badResponse(res, 'Provide Category Subject queryId');
+    if (!id) return badResponse(res, 'Provide Category Subject id');
 
     const examSubject = await CategorySubject.findById(id).populate('exam');
-    if (!examSubject) return badResponse(res, 'Invalid queryId');
+    if (!examSubject) return badResponse(res, 'Invalid id');
 
     const examCard = await ExamCard.findById(examCardIdTwo)
       .populate('exam')
       .populate('subjects')
       .populate('user');
 
-    if (!examCard.user._id.equals(user._id))
-      return badResponse(res, 'Unauthorized to start this exam');
+    // if (!examCard.user._id.equals(user._id))
+    //   return badResponse(res, 'Unauthorized to start this exam');
 
     const matchFilter = { subject: new ObjectId(examSubject.subject) };
 
