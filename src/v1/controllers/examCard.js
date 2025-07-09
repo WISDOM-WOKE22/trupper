@@ -87,7 +87,7 @@ exports.getExamCardSubjects = async (req, res, next) => {
     let subjects = [];
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide Subscription query id');
-    const subscription = await ExamCard.findOne({ queryId: id });
+    const subscription = await ExamCard.findById(id);
 
     if (subscription.subjects.length > 0) {
       await Promise.all(
@@ -108,6 +108,7 @@ exports.getExamCardSubjects = async (req, res, next) => {
         })
       );
     }
+    console.log(subjects);
     goodResponseDoc(res, 'Exam subjects gotten', 200, subjects);
   } catch (error) {
     next(error);
