@@ -85,13 +85,23 @@ exports.generateBulkCodes = async (req, res, next) => {
 exports.getAllOrganizationCodes = async (req, res, next) => {
   try {
     const { organizationId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const codes = await Code.find({ organization: organizationId })
       .populate({ path: 'category', select: 'name' })
-      .populate({ path: 'subCategory', select: 'name' });
+      .populate({ path: 'subCategory', select: 'name' })
+      .skip(skip)
+      .limit(parseInt(limit));
+    const total = await Code.countDocuments({ organization: organizationId });
     if (!codes || codes.length === 0) {
       return badResponse(res, 'No codes found for this organization');
     }
-    return goodResponseDoc(res, 'Codes retrieved successfully', 200, codes);
+    return goodResponseDoc(res, 'Codes retrieved successfully', 200, {
+      codes,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
   } catch (error) {
     next(error);
   }

@@ -106,19 +106,31 @@ exports.getQuestionsByOrganization = async (req, res, next) => {
   try {
     const { organization } = req.params;
     if (!organization) return badResponse(res, 'Provide organization data');
+    const { subject, exam, examyear, page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const filter = { organization };
+    if (subject) filter.subject = subject;
+    if (exam) filter.exam = exam;
+    if (examyear) filter.examyear = examyear;
 
     // Optionally enable:
     // if (!organizationCheck(res, organization)) return;
 
-    const questions = await Question.find({ organization }).populate({
-      path: 'subject',
+    const questions = await Question.find(filter)
+      .populate({
+        path: 'subject',
+      })
+      .skip(skip)
+      .limit(parseInt(limit));
+    const total = questions.length;
+    return goodResponseDoc(res, 'Questions retrieved successfully', 200, {
+      questions,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / parseInt(limit)),
     });
-    return goodResponseDoc(
-      res,
-      'Questions retrieved successfully',
-      200,
-      questions
-    );
   } catch (error) {
     return next(error);
   }

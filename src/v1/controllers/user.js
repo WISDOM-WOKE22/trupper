@@ -16,10 +16,66 @@ exports.getAUser = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select(
-      'queryId email firstName lastName cbt role createdAt'
-    );
-    goodResponseDoc(res, 'Users found', 200, users);
+    let {
+      page = 1,
+      limit = 10,
+      email,
+      name,
+      dateFrom,
+      dateTo,
+      blocked,
+      active,
+      userCategory,
+      userCategoryTwo,
+    } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const skip = (page - 1) * limit;
+
+    // Build filter object
+    const filter = {};
+    if (email) {
+      filter.email = { $regex: email, $options: 'i' };
+    }
+    if (name) {
+      filter.$or = [
+        { firstName: { $regex: name, $options: 'i' } },
+        { lastName: { $regex: name, $options: 'i' } },
+      ];
+    }
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) filter.createdAt.$lte = new Date(dateTo);
+    }
+    if (blocked !== undefined) {
+      if (blocked === 'true' || blocked === true) filter.isBlocked = true;
+      if (blocked === 'false' || blocked === false) filter.isBlocked = false;
+    }
+    if (active !== undefined) {
+      if (active === 'true' || active === true) filter.status = 'active';
+      if (active === 'false' || active === false) filter.status = 'inactive';
+    }
+    if (userCategory) {
+      filter.category = userCategory;
+    }
+    if (userCategoryTwo) {
+      filter.subCategory = userCategoryTwo;
+    }
+
+    const users = await User.find(filter)
+      .select('queryId email firstName lastName cbt role createdAt')
+      .skip(skip)
+      .limit(limit);
+    const total = await User.countDocuments(filter);
+
+    goodResponseDoc(res, 'Users found', 200, {
+      users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     next(error);
   }
@@ -28,11 +84,65 @@ exports.getAllUsers = async (req, res, next) => {
 exports.getUsersByOrganization = async (req, res, next) => {
   try {
     const { organization } = req.params;
-    const users = await User.find({ organization }).populate([
-      { path: 'category' },
-      { path: 'subCategory' },
-    ]);
-    goodResponseDoc(res, 'Users found', 200, users);
+    const {
+      email,
+      name,
+      dateFrom,
+      dateTo,
+      blocked,
+      active,
+      userCategory,
+      userCategoryTwo,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build filter object
+    const filter = { organization };
+    if (email) {
+      filter.email = { $regex: email, $options: 'i' };
+    }
+    if (name) {
+      filter.$or = [
+        { firstName: { $regex: name, $options: 'i' } },
+        { lastName: { $regex: name, $options: 'i' } },
+      ];
+    }
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) filter.createdAt.$lte = new Date(dateTo);
+    }
+    if (blocked !== undefined) {
+      if (blocked === 'true' || blocked === true) filter.isBlocked = true;
+      if (blocked === 'false' || blocked === false) filter.isBlocked = false;
+    }
+    if (active !== undefined) {
+      if (active === 'true' || active === true) filter.status = 'active';
+      if (active === 'false' || active === false) filter.status = 'inactive';
+    }
+    if (userCategory) {
+      filter.category = userCategory;
+    }
+    if (userCategoryTwo) {
+      filter.subCategory = userCategoryTwo;
+    }
+
+    const users = await User.find(filter)
+      .populate([{ path: 'category' }, { path: 'subCategory' }])
+      .skip(skip)
+      .limit(parseInt(limit));
+    const total = await User.countDocuments(filter);
+
+    goodResponseDoc(res, 'Users found', 200, {
+      users,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / parseInt(limit)),
+    });
   } catch (error) {
     next(error);
   }
