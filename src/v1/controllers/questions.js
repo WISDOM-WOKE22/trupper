@@ -123,7 +123,7 @@ exports.getQuestionsByOrganization = async (req, res, next) => {
       })
       .skip(skip)
       .limit(parseInt(limit));
-    const total = questions.length;
+    const total = await Question.countDocuments(filter);
     return goodResponseDoc(res, 'Questions retrieved successfully', 200, {
       questions,
       total,
