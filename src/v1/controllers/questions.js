@@ -49,7 +49,7 @@ exports.createQuestion = async (req, res, next) => {
       section,
       answer,
       image,
-      questionCategory: questionCategory || 'paid',
+      questionCategory: questionCategory || 'test',
       reason,
       organization,
       exam,
@@ -106,30 +106,42 @@ exports.getQuestionsByOrganization = async (req, res, next) => {
   try {
     const { organization } = req.params;
     if (!organization) return badResponse(res, 'Provide organization data');
-    const { subject, exam, examyear, page = 1, limit = 10 } = req.query;
-    const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    // Destructure and parse query params with defaults
+    const { subject, exam, examyear, page = 1, limit = 10 } = req.query;
+
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const parsedLimit = Math.max(1, parseInt(limit, 10) || 10);
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    // Build filter object efficiently
     const filter = { organization };
     if (subject) filter.subject = subject;
     if (exam) filter.exam = exam;
     if (examyear) filter.examyear = examyear;
 
-    // Optionally enable:
-    // if (!organizationCheck(res, organization)) return;
+    // Use Promise.all to parallelize DB calls for efficiency
+    const [questions, total, totalOfOrganization, totalAIOrganization] =
+      await Promise.all([
+        Question.find(filter)
+          .populate('subject')
+          .skip(skip)
+          .limit(parsedLimit)
+          .lean()
+          .sort({ createdAt: -1 }),
+        Question.countDocuments(filter),
+        Question.countDocuments({ organization }),
+        Question.countDocuments({ organization, method: 'ai' }),
+      ]);
 
-    const questions = await Question.find(filter)
-      .populate({
-        path: 'subject',
-      })
-      .skip(skip)
-      .limit(parseInt(limit));
-    const total = await Question.countDocuments(filter);
     return goodResponseDoc(res, 'Questions retrieved successfully', 200, {
       questions,
       total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(total / parseInt(limit)),
+      page: parsedPage,
+      limit: parsedLimit,
+      totalOfOrganization,
+      totalAIOrganization,
+      totalPages: Math.ceil(total / parsedLimit),
     });
   } catch (error) {
     return next(error);

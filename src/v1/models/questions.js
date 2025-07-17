@@ -45,8 +45,8 @@ const questionSchema = new mongoose.Schema(
     reason: String,
     questionCategory: {
       type: String,
-      enum: ['free', 'paid'],
-      default: 'paid',
+      enum: ['test', 'main'],
+      default: 'test',
     },
     questionType: {
       type: String,
@@ -55,6 +55,11 @@ const questionSchema = new mongoose.Schema(
     },
     queryId: String,
     status: Boolean,
+    method: {
+      type: String,
+      enum: ['ai', 'manual'],
+      default: 'manual',
+    },
   },
   {
     timestamps: true,

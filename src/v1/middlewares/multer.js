@@ -8,10 +8,11 @@ const storage = new Multer.diskStorage({
 });
 
 const imageFilter = function (req, file, cb) {
-  if (!file.mimetype.match(/^image\//)) {
-    cb(new Error('Only image files are allowed!'), false);
-  } else {
+  // Allow only image and PDF files
+  if (file.mimetype.match(/^image\//) || file.mimetype === 'application/pdf') {
     cb(null, true);
+  } else {
+    cb(new Error('Only image and PDF files are allowed!'), false);
   }
 };
 
