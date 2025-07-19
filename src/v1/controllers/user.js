@@ -1,14 +1,123 @@
+const mongoose = require('mongoose');
 const User = require('../models/users');
 const { badResponse, goodResponseDoc } = require('../utils/response');
 const { uploadImage } = require('../utils/image');
+const Result = require('../models/result');
 
 exports.getAUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) return badResponse(res, 'provide User ID');
+
+    // Validate user ID
+    if (!id) return badResponse(res, 'User ID is required');
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return badResponse(res, 'Invalid User ID');
+
+    // Fetch user
     const user = await User.findById(id);
-    if (!user) return badResponse(res, 'user does not exist');
-    goodResponseDoc(res, 'user Found', 200, user);
+    if (!user) return badResponse(res, 'User does not exist');
+
+    // Convert userId to ObjectId
+    const userObjectId = new mongoose.Types.ObjectId(id);
+
+    // Optimized aggregation pipeline
+    const analysis = await Result.aggregate([
+      // Match documents for the user
+      {
+        $match: {
+          $or: [{ user: userObjectId }, { 'general.user': userObjectId }],
+        },
+      },
+      // Lookup exam metadata
+      {
+        $lookup: {
+          from: 'exams',
+          localField: 'exam',
+          foreignField: '_id',
+          as: 'exam',
+        },
+      },
+      { $unwind: { path: '$exam', preserveNullAndEmptyArrays: true } },
+
+      // Unwind general array, preserving null/empty arrays
+      { $unwind: { path: '$general', preserveNullAndEmptyArrays: true } },
+
+      // Merge general entry for matching user
+      {
+        $addFields: {
+          _merged: {
+            $cond: [
+              { $eq: ['$general.user', userObjectId] },
+              {
+                $mergeObjects: [
+                  '$$ROOT',
+                  '$general',
+                  { isGeneralResult: true },
+                ],
+              },
+              {
+                $mergeObjects: ['$$ROOT', { isGeneralResult: false }],
+              },
+            ],
+          },
+        },
+      },
+      { $replaceWith: '$_merged' }, // Replace with merged document
+      { $project: { general: 0, _merged: 0 } }, // Remove unnecessary fields
+      { $sort: { createdAt: -1 } }, // Sort by most recent
+
+      // Facet for results and stats
+      {
+        $facet: {
+          results: [{ $limit: 15 }], // Last 15 results for UI
+          stats: [
+            {
+              $group: {
+                _id: null,
+                totalExams: { $sum: 1 },
+                totalQuestions: { $sum: '$totalQuestions' },
+                totalPassedQuestions: { $sum: '$passed' },
+                totalAttemptedQuestions: { $sum: '$attempted' },
+                totalSkippedQuestions: { $sum: '$skipped' },
+                totalFailedQuestions: { $sum: '$failed' },
+                totalScore: { $sum: '$score' },
+              },
+            },
+            {
+              $addFields: {
+                averageScore: {
+                  $cond: [
+                    { $eq: ['$totalExams', 0] },
+                    0,
+                    { $divide: ['$totalScore', '$totalExams'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, totalScore: 0 } },
+          ],
+        },
+      },
+    ]);
+
+    // Safely handle aggregation output
+    const { results: results = [], stats: [stats = {}] = [] } =
+      analysis[0] || {};
+    const statsObj =
+      stats.length > 0
+        ? stats[0]
+        : {
+            totalExams: 0,
+            totalQuestions: 0,
+            totalPassedQuestions: 0,
+            totalAttemptedQuestions: 0,
+            totalSkippedQuestions: 0,
+            totalFailedQuestions: 0,
+            averageScore: 0,
+          };
+
+    // Return response
+    goodResponseDoc(res, 'User found', 200, { user, results, stats: statsObj });
   } catch (error) {
     next(error);
   }
