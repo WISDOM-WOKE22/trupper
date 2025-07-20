@@ -14,35 +14,36 @@ exports.getAUser = async (req, res, next) => {
       return badResponse(res, 'Invalid User ID');
 
     // Fetch user
-    const user = await User.findById(id);
+    const user = await User.findById(id)
+      .populate({ path: 'category', select: 'name' })
+      .populate({ path: 'subCategory', select: 'name' });
     if (!user) return badResponse(res, 'User does not exist');
 
     // Convert userId to ObjectId
     const userObjectId = new mongoose.Types.ObjectId(id);
 
-    // Optimized aggregation pipeline
+    // Aggregation pipeline to properly calculate stats
     const analysis = await Result.aggregate([
-      // Match documents for the user
+      // Only results for this user (either direct or in general array)
       {
         $match: {
           $or: [{ user: userObjectId }, { 'general.user': userObjectId }],
         },
       },
-      // Lookup exam metadata
+      // Unwind general so we can get all attempts for this user
       {
-        $lookup: {
-          from: 'exams',
-          localField: 'exam',
-          foreignField: '_id',
-          as: 'exam',
+        $unwind: {
+          path: '$general',
+          preserveNullAndEmptyArrays: true,
         },
       },
-      { $unwind: { path: '$exam', preserveNullAndEmptyArrays: true } },
-
-      // Unwind general array, preserving null/empty arrays
-      { $unwind: { path: '$general', preserveNullAndEmptyArrays: true } },
-
-      // Merge general entry for matching user
+      // Only keep general rows for this user, or the root doc if user matches
+      {
+        $match: {
+          $or: [{ user: userObjectId }, { 'general.user': userObjectId }],
+        },
+      },
+      // Overlay general fields if present, otherwise use root
       {
         $addFields: {
           _merged: {
@@ -62,25 +63,25 @@ exports.getAUser = async (req, res, next) => {
           },
         },
       },
-      { $replaceWith: '$_merged' }, // Replace with merged document
-      { $project: { general: 0, _merged: 0 } }, // Remove unnecessary fields
-      { $sort: { createdAt: -1 } }, // Sort by most recent
-
-      // Facet for results and stats
+      { $replaceWith: '$_merged' },
+      { $project: { general: 0, _merged: 0 } },
+      { $sort: { createdAt: -1 } },
       {
         $facet: {
-          results: [{ $limit: 15 }], // Last 15 results for UI
+          results: [{ $limit: 15 }],
           stats: [
             {
               $group: {
                 _id: null,
                 totalExams: { $sum: 1 },
-                totalQuestions: { $sum: '$totalQuestions' },
-                totalPassedQuestions: { $sum: '$passed' },
-                totalAttemptedQuestions: { $sum: '$attempted' },
-                totalSkippedQuestions: { $sum: '$skipped' },
-                totalFailedQuestions: { $sum: '$failed' },
-                totalScore: { $sum: '$score' },
+                totalQuestions: { $sum: { $ifNull: ['$totalQuestions', 0] } },
+                totalPassedQuestions: { $sum: { $ifNull: ['$passed', 0] } },
+                totalAttemptedQuestions: {
+                  $sum: { $ifNull: ['$attempted', 0] },
+                },
+                totalSkippedQuestions: { $sum: { $ifNull: ['$skipped', 0] } },
+                totalFailedQuestions: { $sum: { $ifNull: ['$failed', 0] } },
+                totalScore: { $sum: { $ifNull: ['$score', 0] } },
               },
             },
             {
@@ -101,8 +102,7 @@ exports.getAUser = async (req, res, next) => {
     ]);
 
     // Safely handle aggregation output
-    const { results: results = [], stats: [stats = {}] = [] } =
-      analysis[0] || {};
+    const { results = [], stats = [] } = analysis[0] || {};
     const statsObj =
       stats.length > 0
         ? stats[0]
@@ -116,7 +116,6 @@ exports.getAUser = async (req, res, next) => {
             averageScore: 0,
           };
 
-    // Return response
     goodResponseDoc(res, 'User found', 200, { user, results, stats: statsObj });
   } catch (error) {
     next(error);
@@ -323,7 +322,6 @@ exports.updateMe = (Model) => async (req, res, next) => {
     // Handle image upload
     let image = '';
     if (req.file) {
-      console.log(req.file);
       image = await uploadImage(req, res);
     }
 

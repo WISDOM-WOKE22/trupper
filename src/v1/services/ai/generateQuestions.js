@@ -26,14 +26,10 @@ class GeminiExamGenerator {
 
   async uploadFile(path, mimeType) {
     try {
-      console.log({ path });
       const uploadResult = await this.fileManager.uploadFile(path, {
         mimeType,
         displayName: path,
       });
-      console.log(
-        `Uploaded file ${uploadResult.file.displayName} as: ${uploadResult.file.name}`
-      );
       return uploadResult.file;
     } catch (error) {
       throw new Error(`File upload failed: ${error.message}`);
@@ -41,7 +37,6 @@ class GeminiExamGenerator {
   }
 
   async waitForFilesActive(files) {
-    console.log('Waiting for file processing...');
     const maxRetries = 5;
     const baseDelay = 5000;
     for (const file of files) {
@@ -60,7 +55,6 @@ class GeminiExamGenerator {
         );
       }
     }
-    console.log('...all files ready\n');
   }
 
   async generateExamQuestions(filePaths, mimeTypes, res, noOfQuestions) {
@@ -181,7 +175,6 @@ exports.generateExamQuestions = async (req, res, next) => {
 
     filePaths.forEach((filePath) => {
       if (fs.existsSync(filePath)) {
-        console.log('File exist');
         fs.unlinkSync(filePath);
       }
     });

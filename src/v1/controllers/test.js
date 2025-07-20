@@ -34,7 +34,6 @@ async function uploadFromUrl() {
       timeout: 60000, // Set a 60-second timeout
     });
 
-    console.log('Upload successful!');
     console.log('Secure URL:', result.secure_url);
   } catch (error) {
     console.error('Upload failed:', error);
@@ -52,7 +51,6 @@ async function listUploads() {
       type: 'upload',
       max_results: 10,
     });
-    console.log('Listing uploads:');
     result.resources.forEach((file) => {
       console.log(`${file.public_id} -> ${file.secure_url}`);
     });

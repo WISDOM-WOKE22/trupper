@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const { Server } = require('socket.io');
+const initSocket = require('./v1/services/socket');
+const { setIO } = require('./v1/services/socket/io');
 
 dotenv.config({ path: './main.env' });
 
@@ -12,11 +15,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// app.use((req, res, next) => {
-//   req.requestTime = new Date().toISOString();
-//   next();
-// });
 
 // Database connection
 let URI;
@@ -29,63 +27,91 @@ if (process.env.NODE_ENV === 'development') {
   ).replace('<password>', process.env.DATABASE_PASSWORD);
 }
 
+// Function to start the server after DB connection
+const startServer = async () => {
+  // Routes
+  const userRoute = require('./v1/routes/user');
+  const organizationRoute = require('./v1/routes/organization');
+  const authRoute = require('./v1/routes/auth');
+  const categoryRoute = require('./v1/routes/category');
+  const analyticsRoute = require('./v1/routes/analytics');
+  const adminRoute = require('./v1/routes/admin');
+  const codeRoute = require('./v1/routes/code');
+  const examTypeRoute = require('./v1/routes/examType');
+  const examRoute = require('./v1/routes/exam');
+  const subjectRoute = require('./v1/routes/subject');
+  const questionRoute = require('./v1/routes/question');
+  const newsletterRoute = require('./v1/routes/newsletter');
+  const examCategoryRoute = require('./v1/routes/examCategory');
+  const examModeRoute = require('./v1/routes/examMode');
+  const examCardRoute = require('./v1/routes/examCards');
+  const resultRoute = require('./v1/routes/result');
+  const examModeResultRoute = require('./v1/routes/examResult');
+
+  app.use('/api/v1/users', userRoute);
+  app.use('/api/v1/organization', organizationRoute);
+  app.use('/api/v1/auth', authRoute);
+  app.use('/api/v1/category', categoryRoute);
+  app.use('/api/v1/analytics', analyticsRoute);
+  app.use('/api/v1/admin', adminRoute);
+  app.use('/api/v1/code', codeRoute);
+  app.use('/api/v1/exam-type', examTypeRoute);
+  app.use('/api/v1/exams', examRoute);
+  app.use('/api/v1/subjects', subjectRoute);
+  app.use('/api/v1/questions', questionRoute);
+  app.use('/api/v1/newsletter', newsletterRoute);
+  app.use('/api/v1/exam-category', examCategoryRoute);
+  app.use('/api/v1/exam-mode', examModeRoute);
+  app.use('/api/v1/exam-card', examCardRoute);
+  app.use('/api/v1/results', resultRoute);
+  app.use('/api/v1/exam-mode-result', examModeResultRoute);
+  // Catch-all route for undefined routes
+  app.use('/api/v1/test', (req, res) => {
+    res.status(404).json({
+      status: 'fail',
+      message: `Route ${req.originalUrl} not found on this server`,
+    });
+  });
+
+  // Error handling middleware
+  app.use(ErrorHandler);
+
+  // Server
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+
+  const io = new Server(server, {
+    cors: {
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        /\.vercel\.app$/, // Allow any subdomain of vercel.app
+      ],
+      methods: ['GET', 'POST'],
+    },
+  });
+
+  initSocket(io);
+  await setIO(io);
+};
+
 mongoose
   .connect(URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log('DB connection successful'))
-  .catch((err) => console.log('DB connection failed', err));
-
-// Routes
-// Add your route handlers here before the catch-all route
-const userRoute = require('./v1/routes/user');
-const organizationRoute = require('./v1/routes/organization');
-const authRoute = require('./v1/routes/auth');
-const categoryRoute = require('./v1/routes/category');
-const analyticsRoute = require('./v1/routes/analytics');
-const adminRoute = require('./v1/routes/admin');
-const codeRoute = require('./v1/routes/code');
-const examTypeRoute = require('./v1/routes/examType');
-const examRoute = require('./v1/routes/exam');
-const subjectRoute = require('./v1/routes/subject');
-const questionRoute = require('./v1/routes/question');
-const newsletterRoute = require('./v1/routes/newsletter');
-const examCategoryRoute = require('./v1/routes/examCategory');
-const examModeRoute = require('./v1/routes/examMode');
-const examCardRoute = require('./v1/routes/examCards');
-const resultRoute = require('./v1/routes/result');
-
-app.use('/api/v1/users', userRoute);
-app.use('/api/v1/organization', organizationRoute);
-app.use('/api/v1/auth', authRoute);
-app.use('/api/v1/category', categoryRoute);
-app.use('/api/v1/analytics', analyticsRoute);
-app.use('/api/v1/admin', adminRoute);
-app.use('/api/v1/code', codeRoute);
-app.use('/api/v1/exam-type', examTypeRoute);
-app.use('/api/v1/exams', examRoute);
-app.use('/api/v1/subjects', subjectRoute);
-app.use('/api/v1/questions', questionRoute);
-app.use('/api/v1/newsletter', newsletterRoute);
-app.use('/api/v1/exam-category', examCategoryRoute);
-app.use('/api/v1/exam-mode', examModeRoute);
-app.use('/api/v1/exam-card', examCardRoute);
-app.use('/api/v1/results', resultRoute);
-
-// Catch-all route for undefined routes
-app.use('/api/v1/test', (req, res) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Route ${req.originalUrl} not found on this server`,
+  .then(() => {
+    console.log('DB connection successful');
+    // Call startServer as an async function and handle any errors
+    startServer().catch((err) => {
+      console.error('Error starting server:', err);
+      process.exit(1);
+    });
+  })
+  .catch((err) => {
+    console.error('DB connection failed', err);
+    process.exit(1); // Exit the process if DB connection fails
   });
-});
-
-// Error handling middleware
-app.use(ErrorHandler);
-
-// Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});

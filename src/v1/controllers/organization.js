@@ -118,7 +118,6 @@ exports.getAllOrganizations = async (req, res, next) => {
 exports.suspendOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id);
     const organization = await Organization.findByIdAndUpdate(
       id,
       { status: 'suspended' },
@@ -164,18 +163,6 @@ exports.updateOrganization = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide Organization ID');
-    // const {
-    //   name,
-    //   theme,
-    //   enableSignup,
-    //   codeSignup,
-    //   defaultCategory,
-    //   defaultSubCategory,
-    //   domain,
-    //   defaultPassword,
-    // } = req.body;
-
-    // console.log(enableSignup, codeSignup, req.body);
 
     const organizationCheck = Organization.findById(id);
     if (!organizationCheck)

@@ -38,7 +38,6 @@ exports.createQuestion = async (req, res, next) => {
     if (req.file && req.file.path) {
       image = await uploadImage(req, res);
     }
-    console.log({ image });
 
     const questionDoc = await Question.create({
       question,

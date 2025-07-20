@@ -70,6 +70,11 @@ const resultSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'ExamMode',
     },
+    examModeUsed: {
+      type: Boolean,
+      enum: [true, false],
+      default: false,
+    },
     general: [
       {
         user: {

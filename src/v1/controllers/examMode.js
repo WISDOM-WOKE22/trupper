@@ -2,11 +2,15 @@ const Exam = require('../models/exam');
 const Organization = require('../models/organization');
 const SubCategory = require('../models/userCategoryTwo');
 const ExamMode = require('../models/examMode');
+const ExamModeCard = require('../models/examModeCard');
+const ExamModeResult = require('../models/examModeResult');
+const User = require('../models/users');
 const {
   badResponse,
   goodResponseDoc,
   goodResponse,
 } = require('../utils/response');
+const { getIO } = require('../services/socket/io');
 
 exports.createExamMode = async (req, res, next) => {
   try {
@@ -46,13 +50,15 @@ exports.createExamMode = async (req, res, next) => {
 
 exports.updateExamMode = async (req, res, next) => {
   try {
+    const io = getIO();
+    const user = req.user;
     const { id } = req.params;
+    const { subjects, organization } = req.body;
+    let subjectArray = [];
     if (!id) return badResponse(res, 'Provide exam mode id');
     const examMode = await ExamMode.findByIdAndUpdate(id, req.body, {
       runValidators: false,
     });
-
-    console.log({ examMode });
 
     await ExamMode.updateMany(
       { subCategory: examMode.subCategory },
@@ -65,6 +71,53 @@ exports.updateExamMode = async (req, res, next) => {
     await examMode.save({ validateBeforeSave: false });
 
     if (!examMode) return badResponse(res, 'Exam Modes does not exist');
+
+    if (req.body.status === true) {
+      if (subjects.length > 0) {
+        subjects.map((el) => {
+          subjectArray.push(el.id);
+        });
+      }
+      const examModeCard = await ExamModeCard.create({
+        examMode: examMode._id,
+        status: true,
+        subjects: subjectArray,
+        createdBy: user._id,
+        exam: examMode.exam,
+      });
+
+      // Add all users from the same user category (subCategory) to resultList
+      const usersInCategory = await User.find(
+        { subCategory: examMode.subCategory },
+        '_id'
+      );
+      const resultList = usersInCategory.map((u) => ({
+        user: u._id,
+        score: 0,
+        subject: null,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        attempted: 0,
+      }));
+
+      const examModeResult = await ExamModeResult.create({
+        examMode: examMode._id,
+        examModeCard: examModeCard._id,
+        exam: examMode.exam,
+        createdBy: user._id,
+        resultList: resultList,
+        finishedAt: examMode.validTill,
+        organization: organization,
+      });
+
+      examModeCard.result = examModeResult._id;
+      await examModeCard.save({ validateBeforeSave: false });
+
+      io.emit('examModeActivated', examMode);
+    } else if (req.body.status === false) {
+      io.emit('examModeDeactivated', examMode);
+    }
 
     goodResponseDoc(res, 'Exam mode updated successfully', 200, examMode);
   } catch (error) {
@@ -89,15 +142,19 @@ exports.getExamModesBySubCategory = async (req, res, next) => {
 
 exports.getExamModesBySubCategoryUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    if (!id) return badResponse(res, 'Provide subcategory');
+    const user = req.user;
 
-    const examModes = await ExamMode({
-      subCategory: id,
+    const examModes = await ExamMode.find({
+      subCategory: user.subCategory,
       status: true,
-    });
+    }).populate([{ path: 'createdBy' }, { path: 'exam' }]);
 
-    goodResponseDoc(res, 'Exam modes retrieved successfully', 200, examModes);
+    goodResponseDoc(
+      res,
+      'Exam modes retrieved successfully',
+      200,
+      examModes[0]
+    );
   } catch (error) {
     next(error);
   }

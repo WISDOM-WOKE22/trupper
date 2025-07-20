@@ -30,7 +30,6 @@ exports.createExamCategory = async (req, res, next) => {
 
     if (subjects.length > 0) {
       subjects.map((el) => {
-        console.log(el);
         subjectArray.push({
           name: el.value,
           subject: el.id,

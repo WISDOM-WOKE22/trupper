@@ -364,7 +364,6 @@ exports.deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide category Id');
-    console.log({ id });
     await UserCategoryTwo.deleteMany({ userCategory: id });
     const userCategory = await UserCategory.findByIdAndDelete(id);
 

@@ -21,7 +21,7 @@ const { protect } = require('../middlewares/protectRoute');
 
 const Router = express.Router();
 
-// Router.use(protect(Admin));
+Router.use(protect(Admin));
 
 Router.route('/category-one-by-organization/:organization').get(
   getUserCategoryByOrganization

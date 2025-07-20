@@ -54,7 +54,6 @@ exports.sendNewsLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) return badResponse(res, 'Provide newsletter queryId');
-    console.log(id);
     const newsletter = await NewsLetter.findById(id).populate({
       path: 'organization',
     });
@@ -178,8 +177,6 @@ exports.updateNewsletter = async (req, res, next) => {
     if (!title) return badResponse(res, 'Provide Email title');
     if (!content) return badResponse(res, 'Provide email content');
     if (!userType) return badResponse(res, 'Select user type');
-
-    console.log({ subCategory });
 
     const newsletter = await NewsLetter.findByIdAndUpdate(
       id,

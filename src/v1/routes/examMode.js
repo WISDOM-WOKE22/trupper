@@ -11,7 +11,7 @@ const {
   updateExamMode,
 } = require('../controllers/examMode');
 
-Router.route('/sub-category-user/:id').get(
+Router.route('/sub-category-user').get(
   protect(User),
   getExamModesBySubCategoryUser
 );

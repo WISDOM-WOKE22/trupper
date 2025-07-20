@@ -15,6 +15,7 @@ const {
 } = require('../utils/response');
 const mongoose = require('mongoose');
 const { uploadImage } = require('../utils/image');
+const ExamMode = require('../models/examMode');
 
 exports.createExam = async (req, res, next) => {
   try {
@@ -272,12 +273,27 @@ exports.deleteAnExam = async (req, res, next) => {
   }
 };
 
+exports.startExamModeExam = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return badResponse(res, 'Provide Exam ID');
+    const examMode = await ExamMode.findById(id);
+    if (!examMode) return badResponse(res, 'Invalid exam mode');
+
+    if (examMode.status === false)
+      return badResponse(res, 'Exam mode is not active');
+
+    const exam = await Exam.findById(examMode.exam);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.startAnExam = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { examCardID, examCardIdTwo, duration, examMode, organization } =
       req.body;
-    console.log(req.body, id);
     const user = req.user;
     let questions = [];
     let result;
