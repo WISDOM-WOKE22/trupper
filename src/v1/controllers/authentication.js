@@ -13,6 +13,7 @@ const {
   goodResponseDoc,
   goodResponse,
   goodResponseCustom,
+  badResponseCustom,
 } = require('../utils/response');
 const { consoleError, consoleMessage } = require('../utils/console');
 const {
@@ -356,6 +357,12 @@ exports.createMainUserAccount = async (req, res, next) => {
       loginToken,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return badResponse(
+        res,
+        'An Admin already exists with this Mail Please use another email'
+      );
+    }
     next(error);
   }
 };
