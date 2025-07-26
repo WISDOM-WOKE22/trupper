@@ -162,7 +162,10 @@ exports.generateAndSendUserAuthLink = async (req, res, next) => {
     });
 
     if (emailCheck) {
-      return badResponse(res, 'Email already used');
+      return badResponse(
+        res,
+        'A user  already exist with this email. please use another email'
+      );
     }
 
     if (!subCategory) return badResponse(res, 'User sub Category is missing');
@@ -171,16 +174,23 @@ exports.generateAndSendUserAuthLink = async (req, res, next) => {
     if (!subCategoryCheck)
       return badResponse(res, 'User Sub Category does not exist');
 
+    const checkOrganization = await Organization.findById(organization);
+
+    if (!checkOrganization) {
+      return badResponse(res, 'Organization not found');
+    }
+
     const user = await User.create({
       email,
       category: categoryCheck.id,
       subCategory: subCategoryCheck.id,
+      organization,
     });
 
     if (!user) return badResponse(res, 'Failed to create user');
     const token = await user.createVerificationToken();
     await user.save({ validateBeforeSave: false });
-    const url = `${req.protocol}://${req.get('host')}/signup_con?est=${token}`;
+    const url = `${req.protocol}://${checkOrganization.domain}/kyc-complete/signup_con?est=${token}`;
 
     await new Email(res, user, url, '').signupUserByLink();
 
@@ -551,6 +561,28 @@ exports.getCreatedAdminDetails = async (req, res, next) => {
       .digest('hex');
 
     const subAdmin = await Admin.findOne({ verificationToken: hashedToken });
+
+    if (!subAdmin) return badResponse(res, 'Incorrect Details');
+
+    goodResponseDoc(res, 'Admin Gotten', 200, subAdmin);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET CREATED User DETAILS
+exports.getCreatedUserDetails = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    if (!id) return badResponse(res, 'Provide user Details');
+
+    const hashedToken = await crypto
+      .createHash('sha256')
+      .update(id)
+      .digest('hex');
+
+    const subAdmin = await User.findOne({ verificationToken: hashedToken });
 
     if (!subAdmin) return badResponse(res, 'Incorrect Details');
 

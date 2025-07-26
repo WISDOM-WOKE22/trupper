@@ -23,6 +23,7 @@ const {
   continueUserAccountCreationByLink,
   generateAndSendUserAuthLink,
   token,
+  getCreatedUserDetails,
 } = require('../controllers/authentication');
 
 const Router = express.Router();
@@ -84,6 +85,8 @@ Router.route('/complete-admin-creation/:id').post(completeAdminCreation);
 
 // Get Created Admin Details
 Router.route('/get-created-admin-details/:id').get(getCreatedAdminDetails);
+
+Router.route('/get-created-user-details/:id').get(getCreatedUserDetails);
 
 // Resend 2FA Code
 Router.route('/resend-2fa-code/:token').post(resend2FACode(User));

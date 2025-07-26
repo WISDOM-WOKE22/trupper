@@ -240,6 +240,7 @@ exports.getUsersByOrganization = async (req, res, next) => {
 
     const users = await User.find(filter)
       .populate([{ path: 'category' }, { path: 'subCategory' }])
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
     const total = await User.countDocuments(filter);
