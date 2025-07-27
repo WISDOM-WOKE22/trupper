@@ -19,9 +19,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(helmet());
-app.use(mongoSanitize());
-app.use(xss());
+// app.use(helmet());
+// app.use(mongoSanitize());
+// app.use(xss());
 
 // Rate Limiting Middleware
 const apiLimiter = rateLimit({
