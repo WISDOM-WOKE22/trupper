@@ -26,23 +26,23 @@ exports.getExamModeResult = async (req, res, next) => {
     const totalStudents = resultList.length;
 
     // Filter out results with valid scores for stats
-    const scores = resultList
-      .map((r) => (typeof r.score === 'number' ? r.score : null))
-      .filter((score) => score !== null);
+    const scores = resultList.map((r) =>
+      typeof r.score === 'number' ? r.score : 0
+    );
 
-    let averageScore = null;
-    let highestScore = null;
-    let lowestScore = null;
+    let averageScore = 0;
+    let highestScore = 0;
+    let lowestScore = 0;
 
     if (scores.length > 0) {
       const sum = scores.reduce((acc, curr) => acc + curr, 0);
-      averageScore = sum / scores.length;
+      averageScore = scores.length > 0 ? sum / scores.length : 0;
       highestScore = Math.max(...scores);
       lowestScore = Math.min(...scores);
     }
 
     // Calculate average school (most common school)
-    let averageSchool = null;
+    let averageSchool = 0;
     if (resultList.length > 0) {
       const schoolCount = {};
       resultList.forEach((r) => {
