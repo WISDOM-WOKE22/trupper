@@ -3,8 +3,12 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
+const rateLimit = require('express-rate-limit');
 const initSocket = require('./v1/services/socket');
 const { setIO } = require('./v1/services/socket/io');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 dotenv.config({ path: './main.env' });
 
@@ -15,6 +19,24 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(xss());
+
+// Rate Limiting Middleware
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    status: 'fail',
+    message: 'Too many requests from this IP, please try again later.',
+  },
+});
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // Database connection
 let URI;
