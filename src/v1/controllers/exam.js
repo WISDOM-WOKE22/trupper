@@ -16,6 +16,8 @@ const {
 const mongoose = require('mongoose');
 const { uploadImage } = require('../utils/image');
 const ExamMode = require('../models/examMode');
+const ExamModeCard = require('../models/examModeCard');
+const ExamModeResult = require('../models/examModeResult');
 
 exports.createExam = async (req, res, next) => {
   try {
@@ -292,16 +294,101 @@ exports.startExamModeExam = async (req, res, next) => {
 exports.startAnExam = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { examCardID, examCardIdTwo, duration, examMode, organization } =
+    const { examCardID, examCardIdTwo, duration, examMode, examModeId } =
       req.body;
     const user = req.user;
     let questions = [];
     let result;
     let tm;
 
+    if (examMode) {
+      const foundExamMode = await ExamMode.findById(examModeId);
+      if (!foundExamMode) return badResponse(res, 'Invalid exam mode');
+
+      if (foundExamMode.status === false)
+        return badResponse(res, 'Exam mode is not active');
+
+      // The bug: ExamModeCard.find returns an array, not a single document.
+      // Fix: Use findOne to get a single active card for this exam mode.
+      const examModeCard = await ExamModeCard.findOne({
+        examMode: foundExamMode._id,
+        status: true,
+      })
+        .populate('subjects')
+        .populate('exam');
+      if (!examModeCard) return badResponse(res, 'Invalid exam mode card');
+
+      const examSubjects = examModeCard.subjects;
+      const exam = examModeCard.exam;
+
+      if (examModeCard.subjectToBeWritten < 1)
+        return badResponse(res, 'Invalid exam configuration');
+
+      const questionPromises = examSubjects.map(async (subject) => {
+        const matchFilter = {
+          subject: new ObjectId(subject._id || subject),
+        };
+
+        const sampleSize = Math.floor(exam.noOfQuestions / examSubjects.length);
+        return await Questions.aggregate([
+          { $match: matchFilter },
+          { $sample: { size: sampleSize } },
+          {
+            $lookup: {
+              from: 'subjects',
+              localField: 'subject',
+              foreignField: '_id',
+              as: 'subject',
+            },
+          },
+          { $unwind: '$subject' },
+        ]);
+      });
+
+      const questionsArrays = await Promise.all(questionPromises);
+      questions = questionsArrays.flat();
+
+      if (!questions.length)
+        return badResponse(res, 'No questions available for this exam');
+
+      tm = duration || exam.duration;
+
+      result = await Result.create({
+        user: user._id,
+        exam: exam._id,
+        subject: exam.acronym,
+        duration: tm,
+        totalQuestions: exam.noOfQuestions,
+        score: 0,
+        examModeUsed: true,
+        examMode: foundExamMode._id,
+      });
+
+      user.examOngoing = true;
+      user.examResultId = result._id;
+      user.examState = {
+        questions,
+        duration: tm,
+        subject: exam.acronym,
+      };
+
+      await user.save({ runValidators: false, validateBeforeSave: false });
+
+      const userData = await User.findById(user.id);
+
+      return goodResponseDoc(res, 'Exam Started', 201, {
+        questions,
+        duration: tm,
+        subject: exam.acronym,
+        resultId: result._id,
+        user: userData,
+      });
+    }
+
     // ***********************
     // Case 1: Using examCardID
     // ***********************
+
     if (examCardID) {
       const examCard = await ExamCard.findById(examCardID)
         .populate('exam')
@@ -473,7 +560,8 @@ exports.endExam = async (req, res, next) => {
     const result = await Result.findById(id)
       .populate('user')
       .populate('subscription')
-      .populate('exam');
+      .populate('exam')
+      .populate('examMode');
 
     if (!result) return badResponse(res, 'Result does not exist');
 
@@ -508,6 +596,36 @@ exports.endExam = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false, runValidators: false });
     await result.save({ validateBeforeSave: false, runValidators: false });
+
+    // If this was an exam mode exam, update the user's result in ExamModeResult
+    if (result.examMode) {
+      // Find the ExamModeResult for this examMode and user
+      const ExamModeResult = require('../models/examModeResult');
+      const examModeResult = await ExamModeResult.findOne({
+        examMode: result.examMode._id,
+      });
+
+      if (examModeResult && Array.isArray(examModeResult.resultList)) {
+        // Find the user's entry in resultList
+        const userResult = examModeResult.resultList.find(
+          (r) => r.user.toString() === user._id.toString()
+        );
+        if (userResult) {
+          userResult.score = score;
+          userResult.passed = passed;
+          userResult.failed = failed;
+          userResult.skipped = skipped;
+          userResult.attempted = attempted;
+          userResult.totalQuestions = totalQuestions;
+          userResult.finished = true;
+          userResult.finishTime = finishTime;
+        }
+        await examModeResult.save({
+          validateBeforeSave: false,
+          runValidators: false,
+        });
+      }
+    }
 
     return goodResponseDoc(res, 'Exam ended', 200, { result });
   } catch (error) {

@@ -88,7 +88,12 @@ exports.updateExamMode = async (req, res, next) => {
 
       // Add all users from the same user category (subCategory) to resultList
       const usersInCategory = await User.find(
-        { subCategory: examMode.subCategory },
+        {
+          subCategory: examMode.subCategory,
+          status: true,
+          organization: organization,
+          role: 'User',
+        },
         '_id'
       );
       const resultList = usersInCategory.map((u) => ({
@@ -144,17 +149,49 @@ exports.getExamModesBySubCategoryUser = async (req, res, next) => {
   try {
     const user = req.user;
 
+    // Find all active exam modes for the user's subcategory
     const examModes = await ExamMode.find({
       subCategory: user.subCategory,
       status: true,
     }).populate([{ path: 'createdBy' }, { path: 'exam' }]);
 
-    goodResponseDoc(
-      res,
-      'Exam modes retrieved successfully',
-      200,
-      examModes[0]
-    );
+    if (examModes.length === 0) {
+      return goodResponseDoc(res, 'No exam modes found', 200, null);
+    } else {
+      const examResult = await ExamModeResult.findOne({
+        examMode: examModes[0]._id,
+      }).populate('resultList.user');
+
+      if (examResult) {
+        const userResult = examResult.resultList.find(
+          (result) =>
+            result.user._id.toString() === user._id.toString() &&
+            result.score > 0
+        );
+        if (userResult) {
+          return goodResponseDoc(
+            res,
+            'You have already written this exam mode. You cannot write it again.',
+            200,
+            null
+          );
+        } else {
+          return goodResponseDoc(
+            res,
+            'You have not written this exam mode. You can write it now.',
+            200,
+            examModes[0]
+          );
+        }
+      } else {
+        return goodResponseDoc(
+          res,
+          'You have not written this exam mode. You can write it now.',
+          200,
+          examModes[0]
+        );
+      }
+    }
   } catch (error) {
     next(error);
   }
