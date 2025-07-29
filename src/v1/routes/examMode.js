@@ -9,6 +9,7 @@ const {
   getExamModesBySubCategory,
   getExamModesBySubCategoryUser,
   updateExamMode,
+  disableExpiredActiveExamModes,
 } = require('../controllers/examMode');
 
 Router.route('/sub-category-user').get(
@@ -23,5 +24,8 @@ Router.route('/').post(createExamMode);
 Router.route('/:id').patch(updateExamMode).delete(deleteAnExamMode);
 
 Router.route('/sub-category/:id').get(getExamModesBySubCategory);
+
+// Route to manually disable expired active exam modes
+Router.route('/disable-expired').post(disableExpiredActiveExamModes);
 
 module.exports = Router;

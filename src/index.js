@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const rateLimit = require('express-rate-limit');
 const initSocket = require('./v1/services/socket');
 const { setIO } = require('./v1/services/socket/io');
+const { initializeCronJobs } = require('./v1/services/cronJobs');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
@@ -118,6 +119,9 @@ const startServer = async () => {
 
   initSocket(io);
   await setIO(io);
+
+  // Initialize cron jobs
+  initializeCronJobs();
 };
 
 mongoose

@@ -87,15 +87,12 @@ exports.updateExamMode = async (req, res, next) => {
       });
 
       // Add all users from the same user category (subCategory) to resultList
-      const usersInCategory = await User.find(
-        {
-          subCategory: examMode.subCategory,
-          status: true,
-          organization: organization,
-          role: 'User',
-        },
-        '_id'
-      );
+      const usersInCategory = await User.find({
+        subCategory: examMode.subCategory,
+        status: true,
+        organization: organization,
+        role: 'User',
+      });
       const resultList = usersInCategory.map((u) => ({
         user: u._id,
         score: 0,
@@ -150,16 +147,16 @@ exports.getExamModesBySubCategoryUser = async (req, res, next) => {
     const user = req.user;
 
     // Find all active exam modes for the user's subcategory
-    const examModes = await ExamMode.find({
+    const examModes = await ExamMode.findOneAndDelete({
       subCategory: user.subCategory,
       status: true,
     }).populate([{ path: 'createdBy' }, { path: 'exam' }]);
 
-    if (examModes.length === 0) {
+    if (!examModes) {
       return goodResponseDoc(res, 'No exam modes found', 200, null);
     } else {
       const examResult = await ExamModeResult.findOne({
-        examMode: examModes[0]._id,
+        examMode: examModes._id,
       }).populate('resultList.user');
 
       if (examResult) {
@@ -180,7 +177,7 @@ exports.getExamModesBySubCategoryUser = async (req, res, next) => {
             res,
             'You have not written this exam mode. You can write it now.',
             200,
-            examModes[0]
+            examModes
           );
         }
       } else {
@@ -188,7 +185,7 @@ exports.getExamModesBySubCategoryUser = async (req, res, next) => {
           res,
           'You have not written this exam mode. You can write it now.',
           200,
-          examModes[0]
+          examModes
         );
       }
     }
@@ -206,6 +203,47 @@ exports.deleteAnExamMode = async (req, res, next) => {
     if (!examMode) return badResponse(res, 'Exam Modes does not exist');
 
     goodResponse(res, 'Exam mode deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Manual function to disable expired active exam modes
+exports.disableExpiredActiveExamModes = async (req, res, next) => {
+  try {
+    const io = getIO();
+    const currentTime = new Date();
+
+    // Find all active exam modes that have expired (validTill < currentTime)
+    const expiredExamModes = await ExamMode.find({
+      status: true,
+      validTill: { $lt: currentTime },
+    });
+
+    if (expiredExamModes.length === 0) {
+      return goodResponse(res, 'No expired exam modes found to disable');
+    }
+
+    // Disable only expired exam modes
+    const result = await ExamMode.updateMany(
+      {
+        status: true,
+        validTill: { $lt: currentTime },
+      },
+      { status: false }
+    );
+
+    // Emit socket event to notify clients about deactivated exam modes
+    if (io) {
+      expiredExamModes.forEach((examMode) => {
+        io.emit('examModeDeactivated', examMode);
+      });
+    }
+
+    goodResponse(
+      res,
+      `Successfully disabled ${result.modifiedCount} expired exam modes`
+    );
   } catch (error) {
     next(error);
   }
