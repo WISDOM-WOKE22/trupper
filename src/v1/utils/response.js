@@ -47,7 +47,7 @@ exports.errorResponse = (res, message, statusCode) => {
 };
 
 exports.badResponseCustom = (res, statusCode, error, message) => {
-  return res.json(statusCode).json({
+  return res.status(statusCode).json({
     status: statusCode,
     statusType: 'Failed',
     message,

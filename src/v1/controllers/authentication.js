@@ -8,6 +8,8 @@ const Category = require('../models/userCategory');
 const SubCategory = require('../models/userCategoryTwo');
 const crypto = require('crypto');
 const Code = require('../models/code');
+const { promisify } = require('util');
+const jwt = require('jsonwebtoken');
 const {
   badResponse,
   goodResponseDoc,
@@ -31,7 +33,7 @@ exports.token = (Model) => async (req, res, next) => {
     const { refreshToken } = req.body;
     if (!refreshToken) return badResponse(res, 'Provide refresh Token');
     const decoded = await promisify(jwt.verify)(
-      token,
+      refreshToken,
       process.env.JWT_REFRESH_TOKEN
     );
     const currentUser = await Model.findById(decoded.id);
@@ -39,6 +41,7 @@ exports.token = (Model) => async (req, res, next) => {
     const newToken = jwtToken(currentUser.id);
     goodResponseDoc(res, 'New Access Token assigned', 200, { token: newToken });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };

@@ -1,6 +1,6 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-const { badResponse } = require('../utils/response');
+const { badResponse, badResponseCustom } = require('../utils/response');
 
 exports.protect = (Model) => async (req, res, next) => {
   try {
@@ -11,9 +11,11 @@ exports.protect = (Model) => async (req, res, next) => {
     ) {
       token = req.headers.authorization.split(' ')[1];
     } else {
-      return badResponse(
+      return badResponseCustom(
         res,
-        'You are not logged in, Please login to get Access'
+        401,
+        'You are not logged in, Please login to get Access',
+        'invalid token'
       );
     }
 
