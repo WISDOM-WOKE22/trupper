@@ -53,7 +53,7 @@ exports.createNewsletterAndSaveAsDraft = async (req, res, next) => {
 exports.sendNewsLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) return badResponse(res, 'Provide newsletter queryId');
+    if (!id) return badResponse(res, 'Provide newsletter id');
     const newsletter = await NewsLetter.findById(id).populate({
       path: 'organization',
     });

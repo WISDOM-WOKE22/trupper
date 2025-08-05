@@ -70,6 +70,7 @@ const startServer = async () => {
   const examCardRoute = require('./v1/routes/examCards');
   const resultRoute = require('./v1/routes/result');
   const examModeResultRoute = require('./v1/routes/examResult');
+  const notificationRoute = require('./v1/routes/notification');
 
   app.use('/api/v1/users', userRoute);
   app.use('/api/v1/organization', organizationRoute);
@@ -88,6 +89,8 @@ const startServer = async () => {
   app.use('/api/v1/exam-card', examCardRoute);
   app.use('/api/v1/results', resultRoute);
   app.use('/api/v1/exam-mode-result', examModeResultRoute);
+  app.use('/api/v1/notification', notificationRoute);
+
   // Catch-all route for undefined routes
   app.use('/api/v1/test', (req, res) => {
     res.status(404).json({
