@@ -9,14 +9,25 @@ const {
   getANotification,
   updateNotification,
   deleteNotification,
+  getAllNotifications,
+  createNotificationAndSaveAsDraft,
+  sendNotification,
 } = require('../controllers/notification');
 
 Router.use(protect(Admin));
 
-Router.post('/', createNotificationAndSend);
-Router.get('/get-by-organization', getNotificationByOrganization);
-Router.get('/get-a-notification/:id', getANotification);
-Router.put('/update/:id', updateNotification);
-Router.delete('/delete/:id', deleteNotification);
+Router.route('/').get(getAllNotifications);
+Router.route('/create-and-send').post(createNotificationAndSend);
+
+Router.route('/draft').post(createNotificationAndSaveAsDraft);
+
+Router.route('/send/:id').post(sendNotification);
+
+Router.route('/get-by-organization/:organization').get(
+  getNotificationByOrganization
+);
+Router.route('/get-a-notification/:id').get(getANotification);
+
+Router.route('/:id').put(updateNotification).delete(deleteNotification);
 
 module.exports = Router;

@@ -5,9 +5,11 @@ const Admin = require('../models/admins');
 const UserNotification = require('../models/userNotification');
 const { getIO } = require('../services/socket/io');
 const { deleteOne, getMany } = require('../utils/factoryFunction');
+const Organization = require('../models/organization');
 
 exports.createNotificationAndSend = async (req, res, next) => {
   try {
+    console.log('test');
     const io = getIO();
     const {
       title,
@@ -25,9 +27,8 @@ exports.createNotificationAndSend = async (req, res, next) => {
     if (!content) return badResponse(res, 'Provide content');
     if (!description) return badResponse(res, 'Provide description');
     if (!userType) return badResponse(res, 'Provide user type');
-    if (!status) return badResponse(res, 'Provide status');
-    if (!userCategory) return badResponse(res, 'Provide user category');
-    if (!subCategory) return badResponse(res, 'Provide sub category');
+    // if (!userCategory) return badResponse(res, 'Provide user category');
+    // if (!subCategory) return badResponse(res, 'Provide sub category');
     if (!organization) return badResponse(res, 'Provide organization');
 
     const user = req.user;
@@ -38,11 +39,10 @@ exports.createNotificationAndSend = async (req, res, next) => {
       content,
       description,
       userType,
-      status,
       userCategory,
       subCategory,
       organization,
-      sentBy: user._id,
+      sentBy: user.id,
     });
 
     let users;
@@ -222,32 +222,37 @@ exports.updateNotification = async (req, res, next) => {
 
 exports.getNotificationByOrganization = async (req, res, next) => {
   try {
-    const { organization } = req.body;
+    const { organization } = req.params;
     if (!organization) return badResponse(res, 'Provide organization id');
 
     const organizationCheck = await Organization.findById(organization);
     if (!organizationCheck)
       return badResponse(res, 'Organization does not exist');
 
-    const notifications = await Notification.find({ organization })
-      .populate({
-        path: 'sentBy',
+    // Fetch notifications without population first
+    const notifications = await Notification.find({ organization });
+
+    // Populate userCategory and subCategory only if they exist for each notification
+    const populatedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        let query = Notification.findById(notification._id)
+          .populate('sentBy')
+          .populate('organization');
+        if (notification.userCategory) {
+          query = query.populate('userCategory');
+        }
+        if (notification.subCategory) {
+          query = query.populate('subCategory');
+        }
+        return await query.exec();
       })
-      .populate({
-        path: 'userCategory',
-      })
-      .populate({
-        path: 'subCategory',
-      })
-      .populate({
-        path: 'organization',
-      });
+    );
 
     goodResponseDoc(
       res,
       'Notifications retrieved successfully',
       200,
-      notifications
+      populatedNotifications
     );
   } catch (error) {
     next(error);
