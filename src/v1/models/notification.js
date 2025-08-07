@@ -22,18 +22,31 @@ const notificationSchema = new mongoose.Schema(
     },
     sentBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Admin',
     },
     status: {
       type: String,
-      enum: ['read', 'unread'],
-      default: 'read',
+      enum: ['sent', 'draft'],
+      default: 'draft',
     },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
     },
     queryId: String,
+    userType: {
+      type: String,
+      enum: ['all', 'admins', 'users'],
+      default: 'all',
+    },
+    userCategory: {
+      type: Schema.Types.ObjectId,
+      ref: 'UserCategory',
+    },
+    subCategory: {
+      type: Schema.Types.ObjectId,
+      ref: 'SubCategory',
+    },
   },
   {
     timestamps: true,
