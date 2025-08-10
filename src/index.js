@@ -71,6 +71,7 @@ const startServer = async () => {
   const resultRoute = require('./v1/routes/result');
   const examModeResultRoute = require('./v1/routes/examResult');
   const notificationRoute = require('./v1/routes/notification');
+  const userNotificationRoute = require('./v1/routes/userNotification');
 
   app.use('/api/v1/users', userRoute);
   app.use('/api/v1/organization', organizationRoute);
@@ -90,7 +91,7 @@ const startServer = async () => {
   app.use('/api/v1/results', resultRoute);
   app.use('/api/v1/exam-mode-result', examModeResultRoute);
   app.use('/api/v1/notification', notificationRoute);
-
+  app.use('/api/v1/user-notification', userNotificationRoute);
   // Catch-all route for undefined routes
   app.use('/api/v1/test', (req, res) => {
     res.status(404).json({
