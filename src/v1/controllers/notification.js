@@ -28,9 +28,11 @@ exports.createNotificationAndSend = async (req, res, next) => {
     if (!content) return badResponse(res, 'Provide content');
     if (!description) return badResponse(res, 'Provide description');
     if (!userType) return badResponse(res, 'Provide user type');
-    // if (!userCategory) return badResponse(res, 'Provide user category');
-    // if (!subCategory) return badResponse(res, 'Provide sub category');
     if (!organization) return badResponse(res, 'Provide organization');
+    if (userType === 'users') {
+      if (!userCategory) return badResponse(res, 'Provide user category');
+      if (!subCategory) return badResponse(res, 'Provide sub category');
+    }
     console.log(user);
 
     const notification = await Notification.create({
@@ -101,9 +103,17 @@ exports.createNotificationAndSaveAsDraft = async (req, res, next) => {
     if (!description) return badResponse(res, 'Provide description');
     if (!userType) return badResponse(res, 'Provide user type');
 
-    if (!userCategory) return badResponse(res, 'Provide user category');
-    if (!subCategory) return badResponse(res, 'Provide sub category');
     if (!organization) return badResponse(res, 'Provide organization');
+
+    if (userType === 'users') {
+      // const users = await User.find({
+      //   subCategory,
+      // });
+      if (!userCategory) return badResponse(res, 'Provide user category');
+      if (!subCategory) return badResponse(res, 'Provide sub category');
+    } else {
+      const admins = await Admin.find({});
+    }
 
     const user = req.user;
 
