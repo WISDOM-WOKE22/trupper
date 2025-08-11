@@ -9,10 +9,8 @@ const {
   markAllAsRead,
 } = require('../controllers/userNotification');
 
-Router.use(protect(User));
-
-Router.route('/').get(getNotificationsByUser);
-Router.route('/:id').get(getANotification);
-Router.route('/mark-all-as-read').post(markAllAsRead);
+Router.route('/').get(protect(User), getNotificationsByUser);
+Router.route('/:id').get(protect(User), getANotification);
+Router.route('/mark-all-as-read').post(protect(User), markAllAsRead);
 
 module.exports = Router;

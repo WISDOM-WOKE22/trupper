@@ -17,15 +17,18 @@ Router.route('/sub-category-user').get(
   getExamModesBySubCategoryUser
 );
 
-Router.use(protect(Admin));
+Router.route('/').post(protect(Admin), createExamMode);
 
-Router.route('/').post(createExamMode);
-
-Router.route('/:id').patch(updateExamMode).delete(deleteAnExamMode);
+Router.route('/:id')
+  .patch(protect(Admin), updateExamMode)
+  .delete(protect(Admin), deleteAnExamMode);
 
 Router.route('/sub-category/:id').get(getExamModesBySubCategory);
 
 // Route to manually disable expired active exam modes
-Router.route('/disable-expired').post(disableExpiredActiveExamModes);
+Router.route('/disable-expired').post(
+  protect(Admin),
+  disableExpiredActiveExamModes
+);
 
 module.exports = Router;

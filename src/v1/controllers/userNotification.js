@@ -4,7 +4,9 @@ const { goodResponseDoc, badResponse } = require('../utils/response');
 exports.getNotificationsByUser = async (req, res, next) => {
   try {
     const user = req.user;
-    const notifications = await UserNotification.find({ user: user.id });
+    const notifications = await UserNotification.find({
+      user: user.id,
+    }).populate('notification');
     goodResponseDoc(
       res,
       'Notifications fetched successfully',

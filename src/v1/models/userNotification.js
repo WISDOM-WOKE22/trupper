@@ -9,7 +9,7 @@ const userNotificationSchema = new Schema(
     },
     notification: {
       type: Schema.Types.ObjectId,
-      ref: 'Notification',
+      ref: 'Notifications',
     },
     isRead: {
       type: Boolean,

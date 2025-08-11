@@ -18,7 +18,6 @@ exports.protect = (Model) => async (req, res, next) => {
         'invalid token'
       );
     }
-
     const decoded = await promisify(jwt.verify)(
       token,
       process.env.JWT_ACCESS_SECRET
