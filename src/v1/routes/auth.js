@@ -106,9 +106,9 @@ Router.route('/forgot-password-admin').post(forgetPassword(Admin));
 
 Router.route('/add-user').post(generateAndSendUserAuthLink);
 
-Router.route('/token').post(token(User));
+Router.route('/token/:refreshToken').get(token(User));
 
-Router.route('/admin-token').post(token(Admin));
+Router.route('/admin-token/:refreshToken').get(token(Admin));
 
 Router.route('/signup-user-link/:id').post(continueUserAccountCreationByLink);
 

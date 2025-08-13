@@ -29,7 +29,7 @@ const {
 
 exports.token = (Model) => async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.params;
     if (!refreshToken) return badResponse(res, 'Provide refresh Token');
     const decoded = await promisify(jwt.verify)(
       refreshToken,
@@ -38,9 +38,11 @@ exports.token = (Model) => async (req, res, next) => {
     const currentUser = await Model.findById(decoded.id);
     if (!currentUser) return badResponse(res, 'Invalid Credentials');
     const newToken = jwtToken(currentUser.id);
+    const newRefreshToken = generateRefreshToken(currentUser._id);
     goodResponseDoc(res, 'New Access Token assigned', 200, {
       token: newToken,
       user: currentUser,
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
     console.log(error);
