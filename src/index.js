@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const initSocket = require('./v1/services/socket');
 const { setIO } = require('./v1/services/socket/io');
 const { initializeCronJobs } = require('./v1/services/cronJobs');
@@ -27,19 +28,22 @@ app.use(express.json());
 // Rate Limiting Middleware
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'development' ? 2000 : 500,
+  max: process.env.NODE_ENV === 'development' ? 2000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) => {
-    // If logged in, rate limit per user ID
-    if (req.user?.id) return `user-${req.user.id}`;
+    // Logged-in users → per user ID
+    if (req.user?.id) {
+      return `user-${req.user.id}`;
+    }
 
-    // If you have a device ID header/cookie, use that
-    if (req.headers['x-device-id'])
+    // Device ID header
+    if (req.headers['x-device-id']) {
       return `device-${req.headers['x-device-id']}`;
+    }
 
-    // Fallback to IP for anonymous users
-    return req.ip;
+    // Safe IP fallback (handles IPv6 properly)
+    return ipKeyGenerator(req);
   },
   message: {
     status: 'fail',
