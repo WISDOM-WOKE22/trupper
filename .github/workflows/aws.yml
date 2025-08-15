@@ -11,53 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: "production"
       url: ${{ vars.PROD_URL }}
-    env:
-      NODE_OPTIONS: "--max-old-space-size=8192"
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js Environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          
-      - name: Clear npm cache
-        run: npm cache clean --force
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Create .env file
-        run: echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
-
-      - name: Deploy on Server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          source: |
-            ./*                 # send all files
-            !node_modules/*     # exclude node_modules (reinstall on server)
-          target: /var/www/trupper-backend
-          strip_components: 0
-
-      - name: Restart Node.js App on Server
+      - name: Deploy & Restart App on Server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /var/www/my-node-app
+            cd /projects/trupper
+
+            echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
+
+            git pull origin master
+
             npm ci --omit=dev
+
             pm2 restart app || pm2 start app.js trupper-backend app
+
             pm2 save
