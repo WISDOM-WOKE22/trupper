@@ -26,13 +26,24 @@ app.use(express.json());
 
 // Rate Limiting Middleware
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 2000 : 100, // limit each IP to 200 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'development' ? 2000 : 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => {
+    // If logged in, rate limit per user ID
+    if (req.user?.id) return `user-${req.user.id}`;
+
+    // If you have a device ID header/cookie, use that
+    if (req.headers['x-device-id'])
+      return `device-${req.headers['x-device-id']}`;
+
+    // Fallback to IP for anonymous users
+    return req.ip;
+  },
   message: {
     status: 'fail',
-    message: 'Too many requests from this IP, please try again later.',
+    message: 'Too many requests, please try again later.',
   },
 });
 
