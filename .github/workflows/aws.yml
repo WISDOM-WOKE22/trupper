@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.PROD_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /projects/trupper
+            cd projects/trupper
 
             echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
 
