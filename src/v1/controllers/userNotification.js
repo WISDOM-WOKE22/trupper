@@ -6,7 +6,9 @@ exports.getNotificationsByUser = async (req, res, next) => {
     const user = req.user;
     const notifications = await UserNotification.find({
       user: user.id,
-    }).populate('notification');
+    })
+      .populate('notification')
+      .sort({ createdAt: -1 });
     goodResponseDoc(
       res,
       'Notifications fetched successfully',

@@ -13,6 +13,7 @@ const {
 Router.route('/').get(protect(User), getNotificationsByUser);
 Router.route('/admin').get(protect(Admin), getNotificationsByUser);
 Router.route('/:id').get(protect(User), getANotification);
+Router.route('/admin/:id').get(protect(Admin), getANotification);
 Router.route('/mark-all-as-read').post(protect(User), markAllAsRead);
 
 module.exports = Router;
