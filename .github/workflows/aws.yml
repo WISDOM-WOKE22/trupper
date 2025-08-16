@@ -27,7 +27,7 @@ jobs:
           script: |
             cd projects/trupper/backend
 
-            echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
+            echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > main.env
 
             git pull origin master
 
