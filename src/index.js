@@ -4,12 +4,13 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const initSocket = require('./v1/services/socket');
 const { setIO } = require('./v1/services/socket/io');
 const { initializeCronJobs } = require('./v1/services/cronJobs');
-const helmet = require('helmet');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
+// const helmet = require('helmet');
+// const mongoSanitize = require('express-mongo-sanitize');
+// const xss = require('xss-clean');
 
 dotenv.config({ path: './main.env' });
 
@@ -26,13 +27,27 @@ app.use(express.json());
 
 // Rate Limiting Middleware
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 2000 : 100, // limit each IP to 200 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'development' ? 2000 : 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req, res) => {
+    // Logged-in users → per user ID
+    if (req.user?.id) {
+      return `user-${req.user.id}`;
+    }
+
+    // Device ID header
+    if (req.headers['x-device-id']) {
+      return `device-${req.headers['x-device-id']}`;
+    }
+
+    // Safe IP fallback (handles IPv6 properly)
+    return ipKeyGenerator(req);
+  },
   message: {
     status: 'fail',
-    message: 'Too many requests from this IP, please try again later.',
+    message: 'Too many requests, please try again later.',
   },
 });
 
