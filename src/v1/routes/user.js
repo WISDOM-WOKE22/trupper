@@ -23,6 +23,10 @@ Router.route('/').get(getAllUsers);
 Router.route('/enable-2fa').post(protect(User), Enable2Fa(User));
 Router.route('/disable-2fa').post(protect(User), disable2Fa(User));
 
+// Admin Two Factor
+Router.route('/admin-enable-2fa').post(protect(Admin), Enable2Fa(Admin));
+Router.route('/admin-disable-2fa').post(protect(Admin), disable2Fa(Admin));
+
 Router.route('/get_users').post(getUsersName);
 
 Router.route('/get_users_by_organization/:organization').get(
