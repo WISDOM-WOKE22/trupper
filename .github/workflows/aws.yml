@@ -33,6 +33,6 @@ jobs:
 
             npm ci --omit=dev
 
-            pm2 restart app || pm2 start app.js trupper-backend app
+            pm2 restart trupper-backend || pm2 start ./src/index.js trupper-backend app
 
             pm2 save
