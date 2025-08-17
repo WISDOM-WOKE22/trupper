@@ -735,7 +735,7 @@ exports.login = (Model) => async (req, res, next) => {
         res,
         'Complete login with the code sent to email',
         203,
-        { twoFactor: true, token }
+        { twoFactor: true, token, role: user.role }
       );
     }
     // TODO: IMPORTANT LINE OF CODE TO BE RESTORED
@@ -832,6 +832,7 @@ exports.LoginWith2Fa = (Model) => async (req, res, next) => {
     if (!twoFactorVerificationCode)
       return badResponse(res, 'Provide verification code');
     const decodedToken = await verifyJwt(token);
+    console.log(decodedToken);
     const user = await Model.findOne({
       _id: decodedToken.id,
       twoFactorVerificationCode,
