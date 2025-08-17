@@ -27,7 +27,8 @@ app.use(express.json());
 
 // Rate Limiting Middleware
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  // windowMs: 15 * 60 * 1000,
+  windowMs: 1000,
   max: process.env.NODE_ENV === 'development' ? 2000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
