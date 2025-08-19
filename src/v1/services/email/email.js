@@ -137,4 +137,8 @@ module.exports = class Email {
       `Welcome to ${this.organization} by Organization`
     );
   }
+
+  async waitlist() {
+    await this.send('waitlist', `You're on the Waitlist 🎉 | Trupper`);
+  }
 };
