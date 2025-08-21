@@ -25,14 +25,24 @@ jobs:
           username: ${{ secrets.PROD_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            set -e
+
             cd projects/trupper/backend
 
             echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > main.env
 
-            git pull origin master
+            # Ensure we're on master and pull latest changes
+            git fetch origin master
+            git reset --hard origin/master
 
+            # Install production dependencies
             npm ci --omit=dev
 
-            pm2 restart trupper-backend || pm2 start ./src/index.js trupper-backend app
-
+            # Restart backend service with PM2
+            pm2 stop trupper-backend || true
+            pm2 delete trupper-backend || true
+            pm2 start ./src/index.js --name trupper-backend
             pm2 save
+
+            # Reload nginx to apply new configuration (if any)
+            sudo nginx -t && sudo systemctl reload nginx
