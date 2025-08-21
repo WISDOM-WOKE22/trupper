@@ -134,6 +134,7 @@ const startServer = async () => {
         'http://localhost:3001',
         'http://localhost:3002',
         /\.vercel\.app$/, // Allow any subdomain of vercel.app
+        /\.amidarh\.com$/, // Allow any subdomain of vercel.app
       ],
       methods: ['GET', 'POST'],
     },
