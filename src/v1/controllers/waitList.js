@@ -16,7 +16,7 @@ const addToWaitList = async (req, res) => {
 
     const organizationExists = await Organization.findOne({ email: email });
     if (organizationExists) {
-      return badResponse(res, 'You are already on the waitlist');
+      return badResponse(res, 'An organization already exist with this email');
     }
 
     const waitList = new WaitList({ email, organization });
