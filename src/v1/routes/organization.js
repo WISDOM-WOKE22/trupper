@@ -9,9 +9,11 @@ const {
   getAnOrganizationByDomain,
   updateOrganization,
 } = require('../controllers/organization');
+const { addToWaitList } = require('../controllers/waitList');
 const Router = express.Router();
 const upload = require('../middlewares/multer');
 
+Router.route('/waitlist').post(addToWaitList);
 Router.route('/create').post(createOrganization);
 Router.route('/suspend/:id').post(suspendOrganization);
 Router.route('/unsuspend/:id').post(unsuspendOrganization);
