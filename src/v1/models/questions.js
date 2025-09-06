@@ -50,11 +50,12 @@ const questionSchema = new mongoose.Schema(
     },
     questionType: {
       type: String,
-      enum: ['objective', 'theory', 'sub-objective'],
+      enum: ['objective', 'theorem', 'sub-objective'],
       default: 'objective',
     },
     queryId: String,
     status: Boolean,
+    theoremAnswer: String,
     method: {
       type: String,
       enum: ['ai', 'manual'],

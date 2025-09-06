@@ -24,6 +24,7 @@ exports.createQuestion = async (req, res, next) => {
       reason,
       organization,
       exam,
+      theoremAnswer,
     } = req.body;
 
     if (!question) return badResponse(res, 'Please provide a question');
@@ -52,6 +53,7 @@ exports.createQuestion = async (req, res, next) => {
       reason,
       organization,
       exam,
+      theoremAnswer,
     });
 
     return goodResponseDoc(
@@ -209,6 +211,7 @@ exports.updateQuestion = async (req, res, next) => {
       reason,
       organization,
       exam,
+      theoremAnswer
     } = req.body;
 
     if (!id) return badResponse(res, 'Provide Question ID');
@@ -242,6 +245,7 @@ exports.updateQuestion = async (req, res, next) => {
         reason,
         organization,
         exam,
+        theoremAnswer
       },
       { new: true, runValidators: true }
     )
